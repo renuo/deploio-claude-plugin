@@ -17,5 +17,7 @@
     "hosting",
     "postgresql",
     "ci-cd"
-  ]
+  ],
+  "commands": "./commands/",
+  "hooks": "./hooks/hooks.json"
 }
