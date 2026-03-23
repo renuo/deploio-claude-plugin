@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Deploy and manage apps on Deploio (nine.ch PaaS) — skills for deployment, management, debugging, backing services, and CI/CD.",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "deploio",
       "source": "./",
       "description": "Five skills for deploying and managing Deploio apps: first-time deploy, day-to-day management, debugging, backing service provisioning, and CI/CD pipeline setup.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "license": "MIT",
       "author": {
         "name": "renuo.ch"

@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 
 ---
 
+## [1.1.0] — 2026-03-23
+
+### Added
+- `/deploy` slash command — one-word trigger for the deploy skill
+- `/debug` slash command — one-word trigger for the debug skill
+- Destructive command guard hook — intercepts `nctl delete`, `--replicas=0`, and dangerous exec operations (`db:drop`, `db:reset`) and requires explicit user confirmation before proceeding
+
+---
+
 ## [1.0.0] — 2026-03-23
 
 ### Added
@@ -14,6 +23,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 - **deploio-provision** skill — managed backing services: PostgreSQL (Economy and Business tiers), MySQL, Redis-compatible KVS, OpenSearch, S3-compatible object storage. Extracts credentials and injects env vars automatically.
 - **deploio-ci-cd** skill — CI/CD setup for GitHub Actions, GitLab CI, CircleCI, and Bitbucket Pipelines. Includes multi-environment (staging/production) and per-PR preview environment templates.
 - **deploio-cli** background agent — executes all `nctl` commands on behalf of coordinator skills with `bypassPermissions`.
-- `/deploy` slash command — one-word trigger for the deploy skill.
-- `/debug` slash command — one-word trigger for the debug skill.
-- Destructive command guard hook — intercepts `nctl delete`, `--replicas=0`, and dangerous exec operations (`db:drop`, `db:reset`) and requires explicit user confirmation before proceeding.
+- `/deploy` slash command — one-word trigger for the deploy skill
+- `/debug` slash command — one-word trigger for the debug skill
+- Destructive command guard hook — intercepts `nctl delete`, `--replicas=0`, and dangerous exec operations (`db:drop`, `db:reset`) and requires explicit user confirmation before proceeding
