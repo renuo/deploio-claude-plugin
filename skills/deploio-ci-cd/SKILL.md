@@ -46,7 +46,7 @@ Then ask for whatever else is missing:
 
 ## Phase 1: Confirm the plan
 
-Present a summary before creating anything:
+Call `EnterPlanMode` before presenting the plan summary:
 
 ```
 Here's what I'll set up:
@@ -62,7 +62,7 @@ After setup, you'll need to add three secrets to GitHub:
 
 For multi-environment setups, show both branches and their targets before proceeding.
 
-Use `AskUserQuestion` with these options to get the user's confirmation:
+Call `ExitPlanMode` after the summary. Then use `AskUserQuestion` with these options to get the user's confirmation:
 
 ```
 question: "Ready to set up CI/CD?"

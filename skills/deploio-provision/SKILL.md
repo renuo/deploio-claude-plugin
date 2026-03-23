@@ -58,7 +58,7 @@ When the user hasn't specified a tier, ask: *"Is this for production, or dev/sta
 
 ## Phase 1: Confirm the plan
 
-Before creating anything, show the user what will be provisioned:
+Before creating anything, call `EnterPlanMode` to present the plan card:
 
 ```
 Here's what I'll set up:
@@ -74,7 +74,7 @@ the credentials and inject DATABASE_URL for you.
 Provisioning takes ~1–2 minutes.
 ```
 
-Use `AskUserQuestion` with these options to get the user's confirmation:
+Call `ExitPlanMode` after presenting the plan. Then use `AskUserQuestion` with these options to get the user's confirmation:
 
 ```
 question: "Ready to provision?"
@@ -89,6 +89,13 @@ If the user says "No, cancel" — do not spawn any agents.
 ---
 
 ## Phase 2: Execute — create, extract credentials, inject env vars
+
+Create a task with `TaskCreate` when provisioning starts:
+
+```
+title: "Provisioning <service-type> for <app-name>"
+status: in_progress
+```
 
 Spawn the `deploio-cli` agent with `mode: bypassPermissions`:
 
@@ -375,6 +382,8 @@ The executor reports back:
   "error": null
 }
 ```
+
+Update the task: `TaskUpdate` with `status: completed` on success, `status: failed` on error.
 
 ---
 

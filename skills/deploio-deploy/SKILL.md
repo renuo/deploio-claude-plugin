@@ -208,7 +208,7 @@ First build and release takes ~2–5 minutes.
 
 ```
 
-Use `AskUserQuestion` with these options to get the user's confirmation:
+Use `EnterPlanMode` before presenting the plan card so the user can review it fully before committing. Use `AskUserQuestion` to get confirmation:
 
 ```
 question: "Ready to deploy?"
@@ -217,6 +217,8 @@ options:
   - "Yes, but… (tell me what to adjust)"
   - "No, cancel"
 ```
+
+Call `ExitPlanMode` once the user confirms or cancels.
 
 Derive names:
 - **Project**: `<repo-name>` from the remote URL (e.g. `github.com/acme/myapp` → `myapp`)
@@ -241,7 +243,7 @@ If the user adjusts a name — update the spec and re-present the card before pr
 
 ## Phase 4: Execute — spawn two background agents
 
-Once confirmed, spawn **two `deploio-cli` agents** with `mode: bypassPermissions`, then immediately return to the conversation.
+Once confirmed, use `TaskCreate` to create a task named "Deploying `<app-name>`" (status: `in_progress`) so the user has a visible progress tracker. Then spawn **two `deploio-cli` agents** with `mode: bypassPermissions` and return to the conversation.
 
 **Agent 1 — executor**
 
@@ -339,11 +341,15 @@ You are the coordinator — remain in the conversation. Do not block.
 
 **When the user asks for a status update:** share the latest from the monitor, or check agent status.
 
+Use `SendMessage` to check in on background agents when the user asks for a status update, rather than waiting passively.
+
 **When the executor reports `status: success`:**
 
 Share the URL and any basic auth credentials, then offer structured next steps based on what the user mentioned earlier in the conversation:
 
 ```
+Update the deployment task to `completed` using `TaskUpdate`. Then share the result:
+
 Your app is live at https://<url>
 <If basic_auth: Username: <username> / Password: <password> — run `nctl update app <app> --change-basic-auth-password` to rotate.>
 
@@ -365,7 +371,7 @@ Lead with the option most relevant to the conversation (e.g., if the user mentio
 
 **When the executor reports `status: failed`:**
 
-Translate the error into plain terms using the table below, then offer a concrete fix:
+Update the deployment task to `failed` using `TaskUpdate`. Translate the error into plain terms using the table below, then offer a concrete fix:
 > "The build failed because Rails couldn't find SECRET_KEY_BASE. I'll generate a secure value for you and add it — want me to proceed?"
 
 ---

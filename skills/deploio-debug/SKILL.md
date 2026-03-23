@@ -47,6 +47,13 @@ If no symptom is described and the app is unknown, ask: *"What are you seeing �
 
 ## Phase 1: Gather diagnostics
 
+Create a task with `TaskCreate` to track the investigation:
+
+```
+title: "Diagnosing <app-name>"
+status: in_progress
+```
+
 Spawn one or more `deploio-cli` agents with `mode: bypassPermissions`. When the symptom is unclear or spans multiple stages, **spawn two agents in parallel** rather than sequentially:
 
 - **Agent A** — app status, release history, app logs (boot/runtime/release failures)
@@ -138,7 +145,9 @@ The `live_config` comes from `nctl get app <name> -o yaml` — this is the autho
 
 ## Phase 2: Diagnose and present findings
 
-Read the report and match against the common problems table below. Present findings in plain language — never dump raw nctl output at the user:
+Read the report and match against the common problems table below. If the error message or pattern is not covered by the table and is not self-explanatory, use `WebSearch` (e.g. `"Deploio <error fragment>"` or `"nctl <error> site:guides.deplo.io"`) or `WebFetch` on relevant Deploio docs pages to look up the specific error before presenting findings.
+
+Present findings in plain language — never dump raw nctl output at the user:
 
 ```
 Diagnosis for myapp:
@@ -224,7 +233,17 @@ Spawn the `deploio-cli` agent for this only after the user confirms both conditi
 
 ## Phase 5: Apply the fix
 
-After diagnosis, present the proposed fix to the user in plain terms, then apply it directly by spawning a `deploio-cli` agent with `mode: bypassPermissions`:
+After diagnosis, use `AskUserQuestion` to present the proposed fix before applying:
+
+```
+question: "The app is crashing because <root cause>. Apply the fix?"
+options:
+  - "Yes, apply the fix"
+  - "Show me more details first"
+  - "No, I'll handle it manually"
+```
+
+Then apply it directly by spawning a `deploio-cli` agent with `mode: bypassPermissions`:
 
 ```
 task: fix
@@ -247,7 +266,7 @@ Always present before executing:
 | OOM / restart loop | `nctl update app <name> --project <project> --size=standard-1` |
 | Build env issue | `nctl update app <name> --project <project> --build-env=KEY=VALUE` then `--retry-build` |
 
-After applying the fix, spawn a brief monitor agent (`nctl get app <name> --project <project> --watch`) to confirm the app reaches `Running` status and relay the result.
+After applying the fix, spawn a brief monitor agent (`nctl get app <name> --project <project> --watch`) to confirm the app reaches `Running` status and relay the result. Update the task with `TaskUpdate` — `status: completed` on success, `status: failed` on persistent failure.
 
 ---
 

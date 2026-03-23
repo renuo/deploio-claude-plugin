@@ -256,13 +256,20 @@ Returns:
 
 ## Phase 2: Confirm before executing
 
+Use `AskUserQuestion` for any impactful operation (env var changes, scaling, size changes, rollbacks, worker/job mutations). Show the current → new value diff before asking:
+
 **Env var change:**
 ```
 Updating myapp:
   RAILS_ENV  production → production  (unchanged)
   DATABASE_URL  <not set> → postgres://...
+```
 
-Proceed?
+```
+question: "Apply this change?"
+options:
+  - "Yes, proceed"
+  - "No, cancel"
 ```
 
 **Scale / size change:**
@@ -270,15 +277,20 @@ Proceed?
 Scaling myapp:
   Replicas  1 → 3
   Size      mini → standard-1  (billing impact)
+```
 
-Proceed?
+```
+question: "Apply this change?"
+options:
+  - "Yes, proceed"
+  - "No, cancel"
 ```
 
 - **Retry build / retry release** — no confirmation needed.
 - **Logs / exec / inspect** — no confirmation needed.
-- **Destructive exec** (`db:reset`, `db:seed:replant`) — always confirm explicitly.
+- **Destructive exec** (`db:reset`, `db:seed:replant`) — always use `AskUserQuestion` with an explicit "Yes, I understand this is destructive" option.
 
-If the user says "cancel" or "stop" — do not spawn the executor.
+If the user says "No, cancel" — do not spawn the executor.
 
 ---
 
@@ -469,6 +481,13 @@ The executor reports back:
 
 ## Phase 4: Watch the release
 
+Create a task with `TaskCreate` when the release starts:
+
+```
+title: "Deploying <app-name>"
+status: in_progress
+```
+
 After the executor confirms, spawn a **monitor agent** with `mode: bypassPermissions`:
 
 ```
@@ -487,6 +506,9 @@ nctl logs app <name> --project <project> --type deploy_job -f
 Relay meaningful status changes:
 > "[30s] Release in progress — running deploy job..."
 > "[90s] App is Running ✓"
+
+On success, call `TaskUpdate` with `status: completed`.
+On failure, call `TaskUpdate` with `status: failed`.
 
 On success:
 ```
