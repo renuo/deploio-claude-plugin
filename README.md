@@ -112,7 +112,7 @@ The plugin follows a **coordinator pattern** — Claude never runs `nctl` comman
 ## Requirements
 
 - Claude Code CLI
-- `nctl` v1.1.0 or newer
+- `nctl` v1.14.0 or newer
 - A Deploio account ([deploio.com](https://deploio.com))
 - Your app in a git repository (GitHub, GitLab, Bitbucket, or self-hosted)
 
