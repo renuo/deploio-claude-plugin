@@ -1,6 +1,6 @@
 # Deploio — Claude Code Plugin
 
-[![Version](https://img.shields.io/github/v/tag/renuo/deploio-claude-plugin?label=version)](https://github.com/renuo/deploio-claude-plugin/releases)
+[![Version](https://img.shields.io/github/v/release/renuo/deploio-claude-plugin?label=version)](https://github.com/renuo/deploio-claude-plugin/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 A [Claude Code](https://claude.ai/code) plugin for deploying and managing apps on [Deploio](https://deploio.com) — Nine Internet Solutions' PaaS platform. Instead of memorising `nctl` commands, just describe what you want in plain language.
@@ -64,6 +64,8 @@ Re-run the install command — it overwrites with the latest version.
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/renuo/deploio-claude-plugin/main/uninstall.sh)"
 ```
+
+This pulls the latest version of every marketplace plugin you have installed.
 
 ---
 
