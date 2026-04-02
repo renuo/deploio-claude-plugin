@@ -51,12 +51,14 @@ Call `EnterPlanMode` before presenting the plan summary:
 ```
 Here's what I'll set up:
 
-  Service account   github-actions-deploy  (scoped to acme-production)
-  Workflow file     .github/workflows/deploy.yml
-  Trigger           push to main → deploy myapp to acme-production
+| Setting | Value |
+|---|---|
+| Service account | github-actions-deploy (scoped to acme-production) |
+| Workflow file | .github/workflows/deploy.yml |
+| Trigger | push to main → deploy myapp to acme-production |
 
 After setup, you'll need to add three secrets to GitHub:
-  NCTL_API_CLIENT_ID, NCTL_API_CLIENT_SECRET, NCTL_ORGANIZATION
+NCTL_API_CLIENT_ID, NCTL_API_CLIENT_SECRET, NCTL_ORGANIZATION
 
 ```
 

@@ -152,12 +152,13 @@ Present findings in plain language — never dump raw nctl output at the user:
 ```
 Diagnosis for myapp:
 
-  Status       CrashLoopBackOff (12 restarts)
-  Likely cause SECRET_KEY_BASE is not set — Rails requires it in production
+| Finding | Detail |
+|---|---|
+| Status | CrashLoopBackOff (12 restarts) |
+| Likely cause | SECRET_KEY_BASE is not set — Rails requires it in production |
 
-  From logs:
-    KeyError: key not found: SECRET_KEY_BASE
-    ...
+From logs:
+> KeyError: key not found: SECRET_KEY_BASE
 
 Fix options:
   1. Add the missing env var (I'll do this via deploio-manage)

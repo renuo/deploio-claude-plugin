@@ -190,15 +190,17 @@ Each file contains: default instance size, required env vars, deploy job command
 ```
 Here's what I'll set up:
 
-  Organization   <selected_org>          ← from nctl auth whoami (* entry)
-  Project        <repo-name>             ← repo name only (e.g. deploio-mcp)
-  App            <repo-name>-<branch>    ← e.g. deploio-mcp-main
-  Source    github.com/org/repo  ·  <branch> branch
-  Build     Docker  (or: auto-detected buildpack)
-  Size      <from framework file>        ← e.g. mini for Rails, micro for Node.js/Go/Python
-  Replicas  1 — adjustable after deploy
+| Setting | Value |
+|---|---|
+| Organization | <selected_org> |
+| Project | <repo-name> |
+| App | <repo-name>-<branch> |
+| Source | github.com/org/repo · <branch> branch |
+| Build | Docker (or: auto-detected buildpack) |
+| Size | <from framework file — e.g. mini for Rails, micro for Node.js/Go/Python> |
+| Replicas | 1 |
 
-  <Framework defaults block — copy "Plan card defaults" section from the framework file>
+<Framework defaults block — copy "Plan card defaults" section from the framework file>
 
 Deploio will build your app from source in the cloud and give it an HTTPS URL
 on deploio.app. By default the URL is publicly accessible — if you'd like to
