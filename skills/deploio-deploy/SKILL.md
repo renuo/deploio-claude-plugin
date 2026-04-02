@@ -315,7 +315,7 @@ nctl get app <app> --project=<project>
 
 **Env var syntax:** Multiple env vars can be passed either as repeated flags (`--env=KEY1=VAL1 --env=KEY2=VAL2`) or semicolon-separated in a single flag (`--env='KEY1=VAL1;KEY2=VAL2'`). Both forms are accepted. The same syntax applies to `--build-env`.
 
-On success, report back: `{ "status": "success", "url": "https://...", "basic_auth_credentials": { "username": "...", "password": "..." } | null }`
+On success, report back: `{ "status": "success", "url": "https://<username>:<password>@<host>", "basic_auth_credentials": { "username": "...", "password": "..." } | null }`
 On failure, report back: `{ "status": "failed", "error": "<nctl error output>", "step": "create|auth|url" }`
 
 **Agent 2 — monitor**
@@ -352,8 +352,8 @@ Share the URL and any basic auth credentials, then offer structured next steps b
 ```
 Update the deployment task to `completed` using `TaskUpdate`. Then share the result:
 
-Your app is live at https://<url>
-<If basic_auth: Username: <username> / Password: <password> — run `nctl update app <app> --change-basic-auth-password` to rotate.>
+Your app is live at https://<username>:<password>@<host>
+(To rotate the password later: `nctl update app <app> --change-basic-auth-password`)
 
 What's next?
   → Add a database      — I can provision PostgreSQL or Redis (deploio-provision)
