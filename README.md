@@ -137,15 +137,14 @@ The plugin follows a **coordinator pattern** — Claude never runs `nctl` comman
 
 ## Development
 
-Clone the repo and test the installer locally from your app's project root:
+Clone the repo and run the installer from your app's project root:
 
 ```bash
 git clone git@github.com:renuo/deploio-claude-plugin.git
-cd my-app
-./install.sh ../deploio-claude-plugin
+./deploio-claude-plugin/install.sh ./deploio-claude-plugin
 ```
 
-This skips the GitHub download and copies files directly from the local clone. Re-run after each change to update. Uninstall with `./uninstall.sh`.
+This skips the GitHub download and copies files directly from the local clone. Re-run after each change to update. Uninstall with `./deploio-claude-plugin/uninstall.sh`.
 
 ## Contributing
 
