@@ -352,7 +352,7 @@ Share the URL and any basic auth credentials, then offer structured next steps b
 ```
 Update the deployment task to `completed` using `TaskUpdate`. Then share the result:
 
-Your app is live at https://<username>:<password>@<host>
+Your app is live at [https://<host>](https://<username>:<password>@<host>)
 (To rotate the password later: `nctl update app <app> --change-basic-auth-password`)
 
 What's next?
