@@ -51,10 +51,15 @@ A [Claude Code](https://claude.ai/code) plugin for deploying and managing apps o
 
 **Step 3 — Done.** Claude will now recognise deployment requests and use the plugin automatically.
 
-To update later:
+---
+
+## Upgrading
+
 ```
 /plugin marketplace update
 ```
+
+This pulls the latest version of every marketplace plugin you have installed.
 
 ---
 
