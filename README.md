@@ -65,8 +65,6 @@ Re-run the install command — it overwrites with the latest version.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/renuo/deploio-claude-plugin/main/uninstall.sh)"
 ```
 
-This pulls the latest version of every marketplace plugin you have installed.
-
 ---
 
 ## Skills
@@ -139,20 +137,15 @@ The plugin follows a **coordinator pattern** — Claude never runs `nctl` comman
 
 ## Development
 
-To test changes locally without publishing, pass your local checkout as an argument to the installer:
+Clone the repo and test the installer locally from your app's project root:
 
 ```bash
-cd ~/my-project
-/path/to/deploio-claude-plugin/install.sh /path/to/deploio-claude-plugin
+git clone git@github.com:renuo/deploio-claude-plugin.git
+cd my-app
+./install.sh ../deploio-claude-plugin
 ```
 
-This skips the GitHub download and copies files directly from your local repo. The install is idempotent — re-run after each change to update.
-
-To uninstall:
-
-```bash
-/path/to/deploio-claude-plugin/uninstall.sh
-```
+This skips the GitHub download and copies files directly from the local clone. Re-run after each change to update. Uninstall with `./uninstall.sh`.
 
 ## Contributing
 
