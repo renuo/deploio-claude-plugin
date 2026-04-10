@@ -42,7 +42,10 @@ Run this from your project directory:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/renuo/deploio-claude-plugin/main/install.sh)"
 ```
 
-This installs agents, skills, hooks, and commands into `.claude/` in your project. Done — Claude will now recognise deployment requests automatically.
+This installs agents, skills, hooks, and commands into `.claude/` in your project.
+Done — Claude will now recognise deployment requests automatically.
+
+Run Claude and tell: "Deploy my app to Deploio"
 
 ### What gets installed
 
