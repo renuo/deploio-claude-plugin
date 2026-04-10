@@ -32,6 +32,12 @@ A [Claude Code](https://claude.ai/code) plugin for deploying and managing apps o
    nctl auth whoami
    ```
 
+### Agent Sandboxing
+
+`nctl` is a wrapper around the _Kubernetes_ API, so if you're isolating your agents
+with [safehouse](https://github.com/eugene1g/agent-safehouse) or [nono](https://github.com/always-further/nono),
+you might need to configure extra permissions like [`--enable=kubectl`](https://github.com/eugene1g/agent-safehouse/blob/34a6f80b0de6a9edc0e9029cbf4de726795f40a0/profiles/55-integrations-optional/kubectl.sb).
+
 ---
 
 ## Installation
