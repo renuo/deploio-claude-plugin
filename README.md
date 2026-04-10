@@ -37,29 +37,33 @@ A [Claude Code](https://claude.ai/code) plugin for deploying and managing apps o
 
 ## Installation
 
-**Step 1 — Add this marketplace to Claude Code:**
+Run this from your project directory:
 
-```
-/plugin marketplace add renuo/deploio-claude-plugin
-```
-
-**Step 2 — Install the plugin:**
-
-```
-/plugin install deploio@deploio
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/renuo/deploio-claude-plugin/main/install.sh)"
 ```
 
-**Step 3 — Done.** Claude will now recognise deployment requests and use the plugin automatically.
+This installs agents, skills, hooks, and commands into `.claude/` in your project. Done — Claude will now recognise deployment requests automatically.
 
----
-
-## Upgrading
+### What gets installed
 
 ```
-/plugin marketplace update
+.claude/
+├── agents/deploio-cli.md                  # CLI executor agent
+├── skills/deploio-{deploy,manage,…}/      # Five skills
+├── hooks/deploio-guard-destructive.sh     # Blocks nctl delete and other destructive ops
+└── commands/{deploy,debug}.md             # /deploy and /debug shortcuts
 ```
 
-This pulls the latest version of every marketplace plugin you have installed.
+### Updating
+
+Re-run the install command — it overwrites with the latest version.
+
+### Uninstalling
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/renuo/deploio-claude-plugin/main/uninstall.sh)"
+```
 
 ---
 
@@ -130,6 +134,17 @@ The plugin follows a **coordinator pattern** — Claude never runs `nctl` comman
 - [nctl CLI — installation & reference](https://github.com/ninech/nctl)
 - [nctl releases](https://github.com/ninech/nctl/releases/latest)
 - [Deploio platform](https://deploio.com)
+
+## Development
+
+Clone the repo and run the installer from your app's project root:
+
+```bash
+git clone git@github.com:renuo/deploio-claude-plugin.git
+./deploio-claude-plugin/install.sh ./deploio-claude-plugin
+```
+
+This skips the GitHub download and copies files directly from the local clone. Re-run after each change to update. Uninstall with `./deploio-claude-plugin/uninstall.sh`.
 
 ## Contributing
 
