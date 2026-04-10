@@ -63,10 +63,12 @@ Before creating anything, call `EnterPlanMode` to present the plan card:
 ```
 Here's what I'll set up:
 
-  Service   PostgreSQL Economy
-  Name      myapp-db
-  App       myapp
-  Env var   DATABASE_URL  (manually injected — not auto-injected by Deploio)
+| Setting | Value |
+|---|---|
+| Service | PostgreSQL Economy |
+| Name | myapp-db |
+| App | myapp |
+| Env var | DATABASE_URL (manually injected — not auto-injected by Deploio) |
 
 Deploio does NOT auto-inject connection strings. After creation I'll extract
 the credentials and inject DATABASE_URL for you.

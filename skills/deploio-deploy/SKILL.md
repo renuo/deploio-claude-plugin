@@ -190,15 +190,17 @@ Each file contains: default instance size, required env vars, deploy job command
 ```
 Here's what I'll set up:
 
-  Organization   <selected_org>          ← from nctl auth whoami (* entry)
-  Project        <repo-name>             ← repo name only (e.g. deploio-mcp)
-  App            <repo-name>-<branch>    ← e.g. deploio-mcp-main
-  Source    github.com/org/repo  ·  <branch> branch
-  Build     Docker  (or: auto-detected buildpack)
-  Size      <from framework file>        ← e.g. mini for Rails, micro for Node.js/Go/Python
-  Replicas  1 — adjustable after deploy
+| Setting | Value |
+|---|---|
+| Organization | <selected_org> |
+| Project | <repo-name> |
+| App | <repo-name>-<branch> |
+| Source | github.com/org/repo · <branch> branch |
+| Build | Docker (or: auto-detected buildpack) |
+| Size | <from framework file — e.g. mini for Rails, micro for Node.js/Go/Python> |
+| Replicas | 1 |
 
-  <Framework defaults block — copy "Plan card defaults" section from the framework file>
+<Framework defaults block — copy "Plan card defaults" section from the framework file>
 
 Deploio will build your app from source in the cloud and give it an HTTPS URL
 on deploio.app. By default the URL is publicly accessible — if you'd like to
@@ -313,7 +315,7 @@ nctl get app <app> --project=<project>
 
 **Env var syntax:** Multiple env vars can be passed either as repeated flags (`--env=KEY1=VAL1 --env=KEY2=VAL2`) or semicolon-separated in a single flag (`--env='KEY1=VAL1;KEY2=VAL2'`). Both forms are accepted. The same syntax applies to `--build-env`.
 
-On success, report back: `{ "status": "success", "url": "https://...", "basic_auth_credentials": { "username": "...", "password": "..." } | null }`
+On success, report back: `{ "status": "success", "url": "https://<username>:<password>@<host>", "basic_auth_credentials": { "username": "...", "password": "..." } | null }`
 On failure, report back: `{ "status": "failed", "error": "<nctl error output>", "step": "create|auth|url" }`
 
 **Agent 2 — monitor**
@@ -350,8 +352,8 @@ Share the URL and any basic auth credentials, then offer structured next steps b
 ```
 Update the deployment task to `completed` using `TaskUpdate`. Then share the result:
 
-Your app is live at https://<url>
-<If basic_auth: Username: <username> / Password: <password> — run `nctl update app <app> --change-basic-auth-password` to rotate.>
+Your app is live at [https://<host>](https://<username>:<password>@<host>)
+(To rotate the password later: `nctl update app <app> --change-basic-auth-password`)
 
 What's next?
   → Add a database      — I can provision PostgreSQL or Redis (deploio-provision)

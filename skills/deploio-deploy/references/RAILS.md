@@ -2,12 +2,14 @@
 
 ## Plan card defaults (show to user in Phase 3)
 
-```
-  Rails defaults (auto-configured, no action needed):
-    RAILS_ENV        production
-    SECRET_KEY_BASE  auto-generated (openssl rand -hex 64)
-    Deploy job       rake db:prepare  (runs migrations before each release)
-```
+Rails defaults (auto-configured, no action needed):
+
+| Env / Setting | Value |
+|---|---|
+| RAILS_ENV | production |
+| RAILS_SERVE_STATIC_FILES | true |
+| SECRET_KEY_BASE | auto-generated |
+| Deploy job | rake db:prepare (runs migrations before each release) |
 
 ## Instance size
 

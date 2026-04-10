@@ -261,8 +261,11 @@ Use `AskUserQuestion` for any impactful operation (env var changes, scaling, siz
 **Env var change:**
 ```
 Updating myapp:
-  RAILS_ENV  production → production  (unchanged)
-  DATABASE_URL  <not set> → postgres://...
+
+| Variable | Current | New |
+|---|---|---|
+| RAILS_ENV | production | production (unchanged) |
+| DATABASE_URL | *not set* | postgres://... |
 ```
 
 ```
@@ -275,8 +278,11 @@ options:
 **Scale / size change:**
 ```
 Scaling myapp:
-  Replicas  1 → 3
-  Size      mini → standard-1  (billing impact)
+
+| Setting | Current | New |
+|---|---|---|
+| Replicas | 1 | 3 |
+| Size | mini | standard-1 (billing impact) |
 ```
 
 ```
