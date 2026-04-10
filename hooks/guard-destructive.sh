@@ -4,6 +4,7 @@
 # Used as a PreToolUse hook on Bash — receives JSON via stdin.
 # Exit 0 = allow, Exit 2 = block (message sent to Claude via stderr).
 
+# PreToolUse hooks receive the tool-call payload as JSON on stdin — cat gets it.
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
@@ -12,14 +13,18 @@ if [ -z "$COMMAND" ]; then
 fi
 
 # --- Irreversible deletions (data loss) -------------------------------------
-if echo "$COMMAND" | grep -qE '\bnctl\s+delete\s+(app|postgresdatabase|postgresql|mysqldatabase|mysql|keyvaluestore|opensearch|bucket|bucketuser|apiserviceaccount)\b'; then
+# Match any `nctl delete <resource>` — we intentionally don't enumerate
+# resource types so future additions (new services, etc.) are covered.
+if echo "$COMMAND" | grep -qE '\bnctl\s+delete\b'; then
   RESOURCE=$(echo "$COMMAND" | grep -oE '\bnctl\s+delete\s+\S+' | awk '{print $3}')
   echo "BLOCKED: 'nctl delete ${RESOURCE}' permanently destroys the resource and all its data. Run this command manually in your terminal if you're sure." >&2
   exit 2
 fi
 
 # --- Scale to zero (stops serving traffic) ----------------------------------
-if echo "$COMMAND" | grep -qE '\bnctl\s+update\s+app\b.*--replicas[= ]0\b'; then
+# Anchor on the flag itself rather than the subcommand — `nctl update app`
+# and `nctl update application` are both valid, and we want to catch both.
+if echo "$COMMAND" | grep -qE '(^|\s)--replicas[= ]0\b'; then
   echo "BLOCKED: Setting replicas to 0 stops the app entirely. Run this command manually in your terminal if you're sure." >&2
   exit 2
 fi

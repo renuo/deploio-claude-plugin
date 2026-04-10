@@ -3,7 +3,7 @@ name: deploio-cli
 description: Executes Deploio CLI operations via nctl on behalf of coordinator skills — creating and updating apps, resolving git credentials, monitoring builds and deployments, provisioning backing services, and managing CI/CD service accounts. Spawned by deploio-deploy, deploio-manage, deploio-debug, deploio-provision, and deploio-ci-cd skills.
 model: inherit
 permissionMode: bypassPermissions
-color: green
+color: blue
 tools: Bash, Read
 hooks:
   PreToolUse:
