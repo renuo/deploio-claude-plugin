@@ -25,7 +25,6 @@ A [Claude Code](https://claude.ai/code) plugin for deploying and managing apps o
 2. **Authenticate**:
    ```bash
    nctl auth login                     # opens browser OAuth
-   nctl auth set-project <project>     # select your Deploio project
    ```
 
 3. **Verify**:
