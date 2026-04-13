@@ -24,9 +24,12 @@ git remote get-url origin   # https://github.com/acme/myapp → repo name only (
   nctl auth whoami             # → active organization (marked with *)
 git branch --show-current   # main → app=myapp-main
 ```
-Derive: `app = <repo>-<branch>` (e.g. `myapp-main`). Get `organization` from the `*`-marked entry in `nctl auth whoami` output — **not** from the git URL.
+Derive:
+- `app = <repo>-<branch>` (e.g. `myapp-main`)
+- `organization` — from the `*`-marked entry in `nctl auth whoami` output — **not** from the git URL
+- `project = <organization>-<repo>` (e.g. org `renuotest` + repo `myapp` → project `renuotest-myapp`) — **always** prefix with the organization. nctl returns "project not found" if you pass just `<repo>`.
 
-State your inference and proceed immediately: *"Investigating `myapp-main` in organization `renuotest` — let me know if that's different."* Only ask if there is no git remote, or if nctl fails because the organization doesn't exist.
+State your inference and proceed immediately: *"Investigating `myapp-main` in project `renuotest-myapp` (org `renuotest`) — let me know if that's different."* Only ask if there is no git remote, or if nctl fails because the organization doesn't exist.
 
 **If the app can be inferred, investigate autonomously** — do not wait for the user to describe the symptom. Spawn diagnostic agents to gather logs, status, and release history, then report your findings. The user can always provide more context, but proactive investigation is faster and more useful.
 

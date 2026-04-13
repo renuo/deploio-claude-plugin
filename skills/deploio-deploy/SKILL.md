@@ -25,7 +25,7 @@ Before spawning any agent, evaluate these four conditions from what the user has
 | `auth_known` | User mentioned a Deploio project name or logged in |
 | `framework_known` | User said "Rails app", "Next.js", etc. |
 
-If `remote_known` is false, run `git remote get-url origin` and `git branch --show-current` to discover the URL and branch. If a remote is found, derive the app name as `<repo>-<branch>`. The organization comes from `nctl auth whoami` (the active one, marked `*`) — **not** from the git URL. State: *"I'll deploy project `myapp`, app `myapp-main`, in organization `renuotest` — let me know if that's different."* Only ask for a URL from scratch if no remote is configured.
+If `remote_known` is false, run `git remote get-url origin` and `git branch --show-current` to discover the URL and branch. If a remote is found, derive the app name as `<repo>-<branch>`. The organization comes from `nctl auth whoami` (the active one, marked `*`) — **not** from the git URL. **The project name is always `<organization>-<repo-name>`** (e.g. org `renuotest` + repo `myapp` → project `renuotest-myapp`). nctl returns "project not found" if you pass just `<repo-name>`. State: *"I'll deploy project `renuotest-myapp`, app `myapp-main`, in organization `renuotest` — let me know if that's different."* Only ask for a URL from scratch if no remote is configured.
 
 Pass any known values into the gather-context spec as hints to speed up detection.
 
@@ -193,7 +193,7 @@ Here's what I'll set up:
 | Setting | Value |
 |---|---|
 | Organization | <selected_org> |
-| Project | <repo-name> |
+| Project | <selected_org>-<repo-name> |
 | App | <repo-name>-<branch> |
 | Source | github.com/org/repo · <branch> branch |
 | Build | Docker (or: auto-detected buildpack) |
@@ -223,9 +223,9 @@ options:
 Call `ExitPlanMode` once the user confirms or cancels.
 
 Derive names:
-- **Project**: `<repo-name>` from the remote URL (e.g. `github.com/acme/myapp` → `myapp`)
+- **Organization**: `active_org` from `nctl auth whoami` (the `*`-marked entry, e.g. `renuotest`)
+- **Project**: `<organization>-<repo-name>` — always prefix the repo name with the organization (e.g. org `renuotest` + repo `myapp` → `renuotest-myapp`). Never pass just `<repo-name>` to nctl; it will fail with "project not found".
 - **App**: `<repo-name>-<branch>` (e.g. `myapp-main`)
-- **Organization**: `active_org` from `nctl auth whoami` (the `*`-marked entry)
 
 **Available instance sizes** (set at creation or anytime after with `nctl update app`):
 
