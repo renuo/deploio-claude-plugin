@@ -25,7 +25,7 @@ Before spawning any agent, evaluate these four conditions from what the user has
 | `auth_known` | User mentioned a Deploio project name or logged in |
 | `framework_known` | User said "Rails app", "Next.js", etc. |
 
-If `remote_known` is false, run `git remote get-url origin` and `git branch --show-current` to discover the URL and branch. If a remote is found, derive `app = <repo>-<branch>`, `org` from `nctl auth whoami` (the `*`-marked one — not the git URL), and `project = <org>-<repo>` (e.g. `renuotest-myapp`). Never pass a bare `<repo>` as project — nctl errors "project not found". State: *"I'll deploy project `renuotest-myapp`, app `myapp-main`, in organization `renuotest` — let me know if that's different."* Only ask for a URL from scratch if no remote is configured.
+If `remote_known` is false, run `git remote get-url origin` and `git branch --show-current` to discover the URL and branch. If a remote is found, derive `app = <repo>-<branch>`, `org` from `nctl auth whoami` (the `*`-marked one — not the git URL), and `project = <org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors). State: *"I'll deploy project `renuotest-myapp`, app `myapp-main`, in organization `renuotest` — let me know if that's different."* Only ask for a URL from scratch if no remote is configured.
 
 Pass any known values into the gather-context spec as hints to speed up detection.
 
@@ -224,7 +224,7 @@ Call `ExitPlanMode` once the user confirms or cancels.
 
 Derive names:
 - **Organization**: `active_org` from `nctl auth whoami` (the `*`-marked entry)
-- **Project**: `<org>-<repo>` — always prefix with the org (e.g. `renuotest-myapp`). A bare `<repo>` will fail with "project not found".
+- **Project**: `<org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors)
 - **App**: `<repo>-<branch>` (e.g. `myapp-main`)
 
 **Available instance sizes** (set at creation or anytime after with `nctl update app`):

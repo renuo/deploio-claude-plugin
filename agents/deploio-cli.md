@@ -19,9 +19,9 @@ You are a Deploio CLI expert. You execute nctl commands precisely, handle errors
 
 ---
 
-## Project naming rule — MUST FOLLOW
+## Project naming rule
 
-Project name is always `<org>-<repo>` (e.g. org `renuotest` + repo `mcp-server` → `renuotest-mcp-server`). nctl errors "project not found" if you pass just `<repo>`. Before every `--project=<value>`, confirm `<value>` has the org prefix — if it looks like a bare repo name, resolve the active org via `nctl auth whoami` and prepend it.
+Project is always `<org>-<repo>` (e.g. `renuotest` + `mcp-server` → `renuotest-mcp-server`). Before any `--project=<v>`, verify `<v>` has the org prefix; if not, prepend the active org from `nctl auth whoami`.
 
 ---
 

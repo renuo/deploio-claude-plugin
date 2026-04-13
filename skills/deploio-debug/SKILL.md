@@ -24,7 +24,7 @@ git remote get-url origin   # https://github.com/acme/myapp → repo name only (
   nctl auth whoami             # → active organization (marked with *)
 git branch --show-current   # main → app=myapp-main
 ```
-Derive: `app = <repo>-<branch>`, `org` from the `*`-marked entry in `nctl auth whoami` (not the git URL), `project = <org>-<repo>` (e.g. `renuotest-myapp`). Never pass a bare `<repo>` as project — nctl errors "project not found".
+Derive: `app = <repo>-<branch>`, `org` from the `*`-marked entry in `nctl auth whoami` (not the git URL), `project = <org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors).
 
 State your inference and proceed immediately: *"Investigating `myapp-main` in project `renuotest-myapp` (org `renuotest`) — let me know if that's different."* Only ask if there is no git remote, or if nctl fails because the organization doesn't exist.
 
