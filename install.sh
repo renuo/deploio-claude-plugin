@@ -1,11 +1,16 @@
 #!/bin/bash
 # Deploio Claude Code Installer
-# Installs Deploio skills and agents into the current project's .claude/ directory.
+# Installs Deploio skills and agents into a .claude/ directory — either the
+# current project (./.claude/) or globally for your user (~/.claude/).
 # Project-level agents support permissionMode and hooks, so nctl commands run
 # without permission prompts and destructive operations are guarded automatically.
 #
 # Usage:
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/renuo/deploio-claude-plugin/main/install.sh)"
+#
+# Non-interactive (CI / piped):
+#   DEPLOIO_INSTALL_SCOPE=global  ...install.sh   # install to ~/.claude/
+#   DEPLOIO_INSTALL_SCOPE=project ...install.sh   # install to ./.claude/
 #
 # Local testing (skip download, use a local checkout):
 #   ./install.sh /path/to/deploio-claude-plugin
@@ -29,6 +34,36 @@ fail()  { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
 cleanup() { [ -z "${LOCAL_SRC:-}" ] && [ -d "${tmpdir:-}" ] && rm -rf "$tmpdir"; }
 trap cleanup EXIT
 
+# --- resolve install scope --------------------------------------------------
+
+resolve_scope() {
+  local scope="${DEPLOIO_INSTALL_SCOPE:-}"
+
+  if [ -z "$scope" ] && { exec 3</dev/tty; } 2>/dev/null; then
+    printf '\033[1;34m==>\033[0m Install scope:\n'
+    printf '    [g] Global  — ~/.claude/ (available in every project) [default]\n'
+    printf '    [p] Project — ./.claude/ (only this directory)\n'
+    printf 'Choose [G/p]: '
+    local answer
+    read -r answer <&3 || answer=""
+    exec 3<&-
+    case "$answer" in
+      p|P|project) scope="project" ;;
+      *)           scope="global" ;;
+    esac
+  fi
+
+  case "${scope:-global}" in
+    global)  CLAUDE_DIR="$HOME/.claude" ;;
+    project) CLAUDE_DIR="$PWD/.claude" ;;
+    *)       fail "Invalid DEPLOIO_INSTALL_SCOPE: '$scope' (expected 'global' or 'project')" ;;
+  esac
+
+  info "Installing to: $CLAUDE_DIR"
+}
+
+resolve_scope
+
 # --- resolve source ---------------------------------------------------------
 
 if [ -n "${1:-}" ]; then
@@ -51,34 +86,34 @@ fi
 # --- install agents ---------------------------------------------------------
 
 info "Installing agent..."
-mkdir -p .claude/agents
-cp "$src/agents/deploio-cli.md" .claude/agents/deploio-cli.md
+mkdir -p "$CLAUDE_DIR/agents"
+cp "$src/agents/deploio-cli.md" "$CLAUDE_DIR/agents/deploio-cli.md"
 
 # --- install skills ---------------------------------------------------------
 
 info "Installing skills..."
-mkdir -p .claude/skills
+mkdir -p "$CLAUDE_DIR/skills"
 
 for skill_dir in "$src"/skills/*/; do
   skill_name=$(basename "$skill_dir")
-  mkdir -p ".claude/skills/${skill_name}"
-  cp -R "$skill_dir"/* ".claude/skills/${skill_name}/"
+  mkdir -p "$CLAUDE_DIR/skills/${skill_name}"
+  cp -R "$skill_dir"/* "$CLAUDE_DIR/skills/${skill_name}/"
 done
 
 # --- install hooks ----------------------------------------------------------
 
 info "Installing hooks..."
-mkdir -p .claude/hooks
-cp "$src/hooks/guard-destructive.sh" .claude/hooks/deploio-guard-destructive.sh
-chmod +x .claude/hooks/deploio-guard-destructive.sh
+mkdir -p "$CLAUDE_DIR/hooks"
+cp "$src/hooks/guard-destructive.sh" "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
+chmod +x "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
 
 # --- install commands -------------------------------------------------------
 
 info "Installing commands..."
-mkdir -p .claude/commands
+mkdir -p "$CLAUDE_DIR/commands"
 
 for cmd_file in "$src"/commands/*.md; do
-  cp "$cmd_file" ".claude/commands/$(basename "$cmd_file")"
+  cp "$cmd_file" "$CLAUDE_DIR/commands/$(basename "$cmd_file")"
 done
 
 # --- summary ----------------------------------------------------------------
@@ -86,13 +121,17 @@ done
 echo ""
 ok "Deploio Claude Code skills installed!"
 echo ""
-echo "  Agent:    .claude/agents/deploio-cli.md"
-echo "  Skills:   .claude/skills/deploio-{deploy,manage,debug,provision,ci-cd}/"
-echo "  Hooks:    .claude/hooks/deploio-guard-destructive.sh"
-echo "  Commands: .claude/commands/{deploy,debug}.md"
+echo "  Agent:    $CLAUDE_DIR/agents/deploio-cli.md"
+echo "  Skills:   $CLAUDE_DIR/skills/deploio-{deploy,manage,debug,provision,ci-cd}/"
+echo "  Hooks:    $CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
+echo "  Commands: $CLAUDE_DIR/commands/{deploy,debug}.md"
 echo ""
 echo "  Make sure nctl is installed and authenticated:"
 echo "    nctl auth login"
 echo ""
-echo "  Then just ask Claude: \"Deploy my app to Deploio\""
+echo "  Then:"
+echo "    cd <your project>"
+echo "    claude"
+echo ""
+echo "  And ask: \"Deploy my app to Deploio\""
 echo ""
