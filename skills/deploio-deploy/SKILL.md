@@ -49,7 +49,7 @@ hints:
 
 **Detection steps:**
 
-1. `nctl version` → set `nctl_installed: true/false`; require at least v1.1.0 for Deploio support
+1. `nctl version` → set `nctl_installed: true/false`; require at least v1.16.0 for Deploio support
 2. Use the `remote_url` hint if provided; otherwise run `git remote get-url origin` → set `remote_url`
 3. `git branch --show-current` → set `branch`
 4. Read project files to detect `app_type` and `port` (framework details live in `references/<FRAMEWORK>.md`):
@@ -113,7 +113,7 @@ brew install ninech/tap/nctl          # macOS
 ```
 Re-run Phase 1 after install.
 
-**nctl version too old:** Deploio requires nctl v1.1.0 or newer. Run `brew upgrade ninech/tap/nctl` (macOS) or re-download from releases.
+**nctl version too old:** Deploio requires nctl v1.16.0 or newer. Run `brew upgrade ninech/tap/nctl` (macOS) or re-download from releases.
 
 **No git remote:** Deploio always pulls from a git host — it never receives files directly.
 ```bash
