@@ -22,11 +22,11 @@ Your role is coordinator. You never run commands yourself — you spawn `deploio
 ```bash
 git remote get-url origin   # https://github.com/acme/myapp → repo name only (not the org)
   nctl auth whoami             # → active organization (marked with *)
-git branch --show-current   # main → app=myapp-main
+git branch --show-current   # main → app=main
 ```
-Derive: `app = <repo>-<branch>`, `org` from the `*`-marked entry in `nctl auth whoami` (not the git URL), `project = <org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors).
+Derive: `app = <branch>` (e.g. `main`), `org` from the `*`-marked entry in `nctl auth whoami` (not the git URL), `project = <org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors).
 
-State your inference and proceed immediately: *"Investigating `myapp-main` in project `renuotest-myapp` (org `renuotest`) — let me know if that's different."* Only ask if there is no git remote, or if nctl fails because the organization doesn't exist.
+State your inference and proceed immediately: *"Investigating app `main` in project `renuotest-myapp` (org `renuotest`) — let me know if that's different."* Only ask if there is no git remote, or if nctl fails because the organization doesn't exist.
 
 **If the app can be inferred, investigate autonomously** — do not wait for the user to describe the symptom. Spawn diagnostic agents to gather logs, status, and release history, then report your findings. The user can always provide more context, but proactive investigation is faster and more useful.
 

@@ -25,7 +25,7 @@ Before spawning any agent, evaluate these four conditions from what the user has
 | `auth_known` | User mentioned a Deploio project name or logged in |
 | `framework_known` | User said "Rails app", "Next.js", etc. |
 
-If `remote_known` is false, run `git remote get-url origin` and `git branch --show-current` to discover the URL and branch. If a remote is found, derive `app = <repo>-<branch>`, `org` from `nctl auth whoami` (the `*`-marked one — not the git URL), and `project = <org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors). State: *"I'll deploy project `renuotest-myapp`, app `myapp-main`, in organization `renuotest` — let me know if that's different."* Only ask for a URL from scratch if no remote is configured.
+If `remote_known` is false, run `git remote get-url origin` and `git branch --show-current` to discover the URL and branch. If a remote is found, derive `app = <branch>` (e.g. `main`), `org` from `nctl auth whoami` (the `*`-marked one — not the git URL), and `project = <org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors). State: *"I'll deploy project `renuotest-myapp`, app `main`, in organization `renuotest` — let me know if that's different."* Only ask for a URL from scratch if no remote is configured.
 
 Pass any known values into the gather-context spec as hints to speed up detection.
 
@@ -194,7 +194,7 @@ Here's what I'll set up:
 |---|---|
 | Organization | <selected_org> |
 | Project | <selected_org>-<repo-name> |
-| App | <repo-name>-<branch> |
+| App | <branch> |
 | Source | github.com/org/repo · <branch> branch |
 | Build | Docker (or: auto-detected buildpack) |
 | Size | <from framework file — e.g. mini for Rails, micro for Node.js/Go/Python> |
@@ -225,7 +225,7 @@ Call `ExitPlanMode` once the user confirms or cancels.
 Derive names:
 - **Organization**: `active_org` from `nctl auth whoami` (the `*`-marked entry)
 - **Project**: `<org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors)
-- **App**: `<repo>-<branch>` (e.g. `myapp-main`)
+- **App**: `<branch>` (e.g. `main`)
 
 **Available instance sizes** (set at creation or anytime after with `nctl update app`):
 
