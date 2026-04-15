@@ -48,11 +48,11 @@ Run this from your project directory:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/renuo/deploio-claude-plugin/main/install.sh)"
 ```
 
-The installer asks whether to install **globally** (`~/.claude/`, available in every project — the default) or only for the **current project** (`./.claude/`). To skip the prompt, set `DEPLOIO_INSTALL_SCOPE=global` or `DEPLOIO_INSTALL_SCOPE=project` before running.
+The installer asks whether to install **globally** or only for the **current project**.
 
 Done — Claude will now recognise deployment requests automatically.
 
-Run Claude and tell: "Deploy my app to Deploio"
+You can now run Claude and tell: "Deploy my app to Deploio"
 
 ### What gets installed
 
