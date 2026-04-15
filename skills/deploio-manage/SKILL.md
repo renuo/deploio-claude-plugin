@@ -20,11 +20,11 @@ Your role is coordinator. You never run commands yourself — you spawn `deploio
 ```bash
 git remote get-url origin   # https://github.com/acme/myapp → repo name only (not the org)
   nctl auth whoami             # → active organization (marked with *)
-git branch --show-current   # main → app=myapp-main
+git branch --show-current   # main → app=main
 ```
-Derive: `app = <repo>-<branch>` (e.g. `myapp-main`). Get `organization` from the `*`-marked entry in `nctl auth whoami` output — **not** from the git URL.
+Derive: `app = <branch>` (e.g. `main`), `org` from the `*`-marked entry in `nctl auth whoami` (not the git URL), `project = <org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors).
 
-State your inference inline: *"Using app `myapp-main` in organization `renuotest` — let me know if that's different."* Proceed immediately. Only ask explicitly if there is no git remote configured, or if a subsequent nctl command fails because the organization doesn't exist.
+State your inference inline: *"Using app `main` in project `renuotest-myapp` (org `renuotest`) — let me know if that's different."* Proceed immediately. Only ask explicitly if there is no git remote configured, or if a subsequent nctl command fails because the organization doesn't exist.
 
 From the conversation, also determine:
 - **Operation** — from the table below

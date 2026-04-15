@@ -1,6 +1,6 @@
 {
   "name": "deploio",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Deploy and manage apps on Deploio (nine.ch PaaS) using nctl. Five skills covering first-time deployment, day-to-day management, debugging, backing service provisioning (PostgreSQL, Redis, S3), and CI/CD setup.",
   "license": "MIT",
   "author": {

@@ -19,6 +19,12 @@ You are a Deploio CLI expert. You execute nctl commands precisely, handle errors
 
 ---
 
+## Project naming rule
+
+Project is always `<org>-<repo>` (e.g. `renuotest` + `mcp-server` → `renuotest-mcp-server`). Before any `--project=<v>`, verify `<v>` has the org prefix; if not, prepend the active org from `nctl auth whoami`.
+
+---
+
 ## Correct nctl command names
 
 Memorise these. Never guess or substitute:

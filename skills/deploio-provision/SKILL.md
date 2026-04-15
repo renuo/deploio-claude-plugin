@@ -20,11 +20,11 @@ Your role is coordinator. You never run commands yourself — you spawn `deploio
 ```bash
 git remote get-url origin   # https://github.com/acme/myapp → repo name only (not the org)
   nctl auth whoami             # → active organization (marked with *)
-git branch --show-current   # main → app=myapp-main
+git branch --show-current   # main → app=main
 ```
-Derive: `app = <repo>-<branch>` (e.g. `myapp-main`). Get `organization` from the `*`-marked entry in `nctl auth whoami` output — **not** from the git URL.
+Derive: `app = <branch>` (e.g. `main`), `org` from the `*`-marked entry in `nctl auth whoami` (not the git URL), `project = <org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors).
 
-State your inference inline: *"Using app `myapp-main` in organization `renuotest` — let me know if that's different."* Proceed with the inferred values. Only ask explicitly if there is no git remote, or if a subsequent nctl command fails because the organization doesn't exist.
+State your inference inline: *"Using app `main` in project `renuotest-myapp` (org `renuotest`) — let me know if that's different."* Proceed with the inferred values. Only ask explicitly if there is no git remote, or if a subsequent nctl command fails because the organization doesn't exist.
 
 From the conversation, also determine:
 - **Service type** — from the table below
@@ -33,7 +33,7 @@ From the conversation, also determine:
 
 **Include the plan skeleton in the same message as your inference**, so the user understands what will happen. For example, when adding PostgreSQL:
 
-> I see your app is `myapp-main` in organization `renuotest` — let me know if that's different.
+> I see your app is `main` in project `renuotest-myapp` (org `renuotest`) — let me know if that's different.
 > Here's what I'll set up:
 > - A managed PostgreSQL Economy database (shared, good for non-production)
 > - `DATABASE_URL` manually injected into your app's environment

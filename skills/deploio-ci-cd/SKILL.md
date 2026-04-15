@@ -27,11 +27,11 @@ Your role is coordinator. You never run commands yourself — you spawn `deploio
 ```bash
 git remote get-url origin   # https://github.com/acme/myapp → repo name only (not the org)
   nctl auth whoami             # → active organization (marked with *)
-git branch --show-current   # main → app=myapp-main (single env) or hints at multi-env
+git branch --show-current   # main → app=main (single env) or hints at multi-env
 ```
-Derive: `app = <repo>-<branch>` (e.g. `myapp-main`). Get `organization` from the `*`-marked entry in `nctl auth whoami` output — **not** from the git URL.
+Derive: `app = <branch>` (e.g. `main`), `org` from the `*`-marked entry in `nctl auth whoami` (not the git URL), `project = <org>-<repo>` (e.g. `renuotest-myapp` — never just `<repo>`; nctl errors).
 
-State your inference: *"I'll configure CI/CD for app `myapp-main` in organization `renuotest` — let me know if that's different."* Only ask if there is no git remote or if a subsequent nctl command fails because the organization doesn't exist.
+State your inference: *"I'll configure CI/CD for app `main` in project `renuotest-myapp` (org `renuotest`) — let me know if that's different."* Only ask if there is no git remote or if a subsequent nctl command fails because the organization doesn't exist.
 
 Then ask for whatever else is missing:
 
@@ -213,12 +213,11 @@ jobs:
       - name: Set environment
         id: env
         run: |
+          echo "project=acme-myapp" >> $GITHUB_OUTPUT
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "project=acme-production" >> $GITHUB_OUTPUT
-            echo "app=myapp-production" >> $GITHUB_OUTPUT
+            echo "app=main" >> $GITHUB_OUTPUT
           else
-            echo "project=acme-staging" >> $GITHUB_OUTPUT
-            echo "app=myapp-staging" >> $GITHUB_OUTPUT
+            echo "app=develop" >> $GITHUB_OUTPUT
           fi
 
       - name: Install nctl
@@ -297,7 +296,7 @@ Preview environments create a temporary Deploio app for each pull request. Key d
 
 2. **Lifecycle**: Create the app on PR open, delete it on PR close.
 
-3. **App naming**: use `<repo>-pr-<number>` (e.g. `myapp-pr-42`)
+3. **App naming**: use `pr-<number>` (e.g. `pr-42`) — scoped within the `<org>-<repo>` project
 
 **GitHub Actions template for preview environments:**
 
@@ -334,7 +333,7 @@ jobs:
           NCTL_API_CLIENT_SECRET: ${{ secrets.NCTL_API_CLIENT_SECRET }}
           NCTL_ORGANIZATION: ${{ secrets.NCTL_ORGANIZATION }}
         run: |
-          APP="myapp-pr-${{ github.event.pull_request.number }}"
+          APP="pr-${{ github.event.pull_request.number }}"
           # Create if not exists, otherwise update
           if ! nctl get app "$APP" 2>/dev/null; then
             nctl create app "$APP" \
@@ -353,7 +352,7 @@ jobs:
           NCTL_API_CLIENT_SECRET: ${{ secrets.NCTL_API_CLIENT_SECRET }}
           NCTL_ORGANIZATION: ${{ secrets.NCTL_ORGANIZATION }}
         run: |
-          nctl delete app "myapp-pr-${{ github.event.pull_request.number }}" || true
+          nctl delete app "pr-${{ github.event.pull_request.number }}" || true
 ```
 
 ---
