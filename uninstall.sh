@@ -1,10 +1,15 @@
 #!/bin/bash
 # Deploio Claude Code Uninstaller
-# Removes all Deploio components installed by install.sh.
-# Only removes Deploio-specific files — leaves .claude/ and other files untouched.
+# Removes all Deploio components installed by install.sh — from either the
+# current project (./.claude/) or the global directory (~/.claude/).
+# Only removes Deploio-specific files — leaves the rest of .claude/ untouched.
 #
 # Usage:
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/renuo/deploio-claude-plugin/main/uninstall.sh)"
+#
+# Non-interactive (CI / piped):
+#   DEPLOIO_INSTALL_SCOPE=global  ...uninstall.sh   # remove from ~/.claude/
+#   DEPLOIO_INSTALL_SCOPE=project ...uninstall.sh   # remove from ./.claude/
 
 set -euo pipefail
 
@@ -13,6 +18,37 @@ set -euo pipefail
 info()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 ok()    { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 warn()  { printf '\033[1;33m==>\033[0m %s\n' "$*"; }
+fail()  { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
+
+# --- resolve install scope --------------------------------------------------
+
+resolve_scope() {
+  local scope="${DEPLOIO_INSTALL_SCOPE:-}"
+
+  if [ -z "$scope" ] && { exec 3</dev/tty; } 2>/dev/null; then
+    printf '\033[1;34m==>\033[0m Uninstall scope:\n'
+    printf '    [g] Global  — ~/.claude/ [default]\n'
+    printf '    [p] Project — ./.claude/\n'
+    printf 'Choose [G/p]: '
+    local answer
+    read -r answer <&3 || answer=""
+    exec 3<&-
+    case "$answer" in
+      p|P|project) scope="project" ;;
+      *)           scope="global" ;;
+    esac
+  fi
+
+  case "${scope:-global}" in
+    global)  CLAUDE_DIR="$HOME/.claude" ;;
+    project) CLAUDE_DIR="$PWD/.claude" ;;
+    *)       fail "Invalid DEPLOIO_INSTALL_SCOPE: '$scope' (expected 'global' or 'project')" ;;
+  esac
+
+  info "Uninstalling from: $CLAUDE_DIR"
+}
+
+resolve_scope
 
 removed=0
 
@@ -34,29 +70,29 @@ remove_dir() {
 
 # --- agent ------------------------------------------------------------------
 
-remove_file ".claude/agents/deploio-cli.md"
+remove_file "$CLAUDE_DIR/agents/deploio-cli.md"
 
 # --- skills -----------------------------------------------------------------
 
-remove_dir ".claude/skills/deploio-deploy"
-remove_dir ".claude/skills/deploio-manage"
-remove_dir ".claude/skills/deploio-debug"
-remove_dir ".claude/skills/deploio-provision"
-remove_dir ".claude/skills/deploio-ci-cd"
-remove_dir ".claude/skills/shared"
+remove_dir "$CLAUDE_DIR/skills/deploio-deploy"
+remove_dir "$CLAUDE_DIR/skills/deploio-manage"
+remove_dir "$CLAUDE_DIR/skills/deploio-debug"
+remove_dir "$CLAUDE_DIR/skills/deploio-provision"
+remove_dir "$CLAUDE_DIR/skills/deploio-ci-cd"
+remove_dir "$CLAUDE_DIR/skills/shared"
 
 # --- hooks ------------------------------------------------------------------
 
-remove_file ".claude/hooks/deploio-guard-destructive.sh"
+remove_file "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
 
 # --- commands ---------------------------------------------------------------
 
-remove_file ".claude/commands/deploy.md"
-remove_file ".claude/commands/debug.md"
+remove_file "$CLAUDE_DIR/commands/deploy.md"
+remove_file "$CLAUDE_DIR/commands/debug.md"
 
 # --- clean up empty directories ---------------------------------------------
 
-for dir in .claude/agents .claude/skills .claude/hooks .claude/commands; do
+for dir in "$CLAUDE_DIR/agents" "$CLAUDE_DIR/skills" "$CLAUDE_DIR/hooks" "$CLAUDE_DIR/commands"; do
   if [ -d "$dir" ] && [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
     rmdir "$dir"
     info "Removed empty directory $dir"
