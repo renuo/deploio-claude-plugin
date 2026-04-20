@@ -3,7 +3,7 @@ name: deploio-manage
 description: Day-to-day operations on a running Deploio app — config changes, routine log monitoring, console/exec access, and redeployments. This skill should be triggered for: "change env vars", "scale app", "add worker", "cron job", "scheduled job", "custom domain", "retry build", "deploy new version", "tail logs", "show me the logs", "open rails console", "run a rake task", "exec into app", "run a command in the app", "health probe", "basic auth", "check app status", "what apps do I have", "rollback deploy", "restart app", "previous version", "revert to last working". Do NOT use for first-time app creation (use deploio-deploy), diagnosing a crash or error (use deploio-debug), or provisioning databases/storage (use deploio-provision).
 license: MIT
 metadata:
-  version: 1.4.0
+  version: 1.5.0
 ---
 
 # Deploio: Managing a Running App
@@ -487,6 +487,8 @@ The executor reports back:
 
 ## Phase 4: Watch the release
 
+> **App `Ready=True` ≠ latest build succeeded.** Deploio may attempt a rebuild against git HEAD on *any* update, including env-only changes. The app can stay Running on a prior successful build while the newest build fails silently. Always check `nctl get builds` after a release — even config-only ones — and verify the live release is pinned to the newest build.
+
 Create a task with `TaskCreate` when the release starts:
 
 ```
@@ -500,21 +502,38 @@ After the executor confirms, spawn a **monitor agent** with `mode: bypassPermiss
 task: watch-release
 app: <app-name>
 project: <project>
-termination: stop when status is Running or Failed, or after 10 minutes
+termination: stop ONLY when ALL three hold —
+  1. App Ready=True
+  2. Latest build status is Succeeded
+  3. Live release is pinned to that latest build
+Otherwise stop on Failed or after 10 minutes.
 ```
 
+The monitor polls all three signals every cycle, not just app status:
+
 ```bash
-nctl get app <name> --project <project> --watch
+nctl get app <name> --project <project> --watch              # app readiness
+nctl get builds --project <project> | head                    # latest build status (Succeeded / Failed / Errored)
+nctl get releases <name> --project <project> | head           # which build the live release is pinned to
 # If deploy job configured:
 nctl logs app <name> --project <project> --type deploy_job -f
 ```
 
+Surface these signals explicitly, not as parentheticals:
+
+- **Latest build failed** — if the most recent entry from `nctl get builds` is Failed/Errored, flag it immediately, regardless of which release is live and regardless of whether the app is Running.
+- **Version regression on release name** — if the new release's BUILDNAME numerically precedes the prior release's, report it: *"⚠ New release is on build `<older>`, but the previous release was on build `<newer>`. Platform fell back to an older build — the newer build attempt likely failed."*
+
 Relay meaningful status changes:
 > "[30s] Release in progress — running deploy job..."
-> "[90s] App is Running ✓"
+> "[90s] App is Running ✓ — release pinned to build `<X>`, which succeeded."
 
 On success, call `TaskUpdate` with `status: completed`.
 On failure, call `TaskUpdate` with `status: failed`.
+
+The final summary must always include a build-status line in plain language, on top of the HTTP sanity check:
+
+> "App is Running (release `<X>` on build `<Y>`). Latest build attempt: `<Z>` — status: Succeeded/Failed."
 
 On success:
 ```
