@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/github/v/release/renuo/deploio-claude-plugin?label=version)](https://github.com/renuo/deploio-claude-plugin/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-A [Claude Code](https://claude.ai/code) plugin for deploying and managing apps on [Deploio](https://deploio.com) — Nine Internet Solutions' PaaS platform. Instead of memorising `nctl` commands, just describe what you want in plain language.
+A [Claude Code](https://claude.ai/code) plugin for deploying and managing apps on [Deploio](https://deploio.ch) — Nine Internet Solutions' PaaS platform. Instead of memorising `nctl` commands, just describe what you want in plain language.
 
 ```
 "Deploy my Rails app to Deploio"
@@ -131,7 +131,7 @@ The plugin follows a **coordinator pattern** — Claude never runs `nctl` comman
 
 - Claude Code CLI
 - `nctl` v1.14.0 or newer
-- A Deploio account ([deploio.com](https://deploio.com))
+- A Deploio account ([deploio.ch](https://deploio.ch))
 - Your app in a git repository (GitHub, GitLab, Bitbucket, or self-hosted)
 
 ---
@@ -142,7 +142,7 @@ The plugin follows a **coordinator pattern** — Claude never runs `nctl` comman
 - [Nine documentation](https://docs.nine.ch)
 - [nctl CLI — installation & reference](https://github.com/ninech/nctl)
 - [nctl releases](https://github.com/ninech/nctl/releases/latest)
-- [Deploio platform](https://deploio.com)
+- [Deploio platform](https://deploio.ch)
 
 ## Development
 
