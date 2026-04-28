@@ -52,9 +52,17 @@ task: gather-context
 Run these immediately in parallel — first action, no preamble:
 ```bash
 nctl --version 2>&1
+nctl auth whoami 2>&1
 git remote -v 2>&1
 git branch --show-current 2>&1
 ```
+
+Interpret `nctl auth whoami` output:
+- Success → parse `active_org` (the entry marked `*`) and `available_orgs` (the full list).
+- Output contains `failed to parse JWT token` (or a similar token-parse error) → set `blockers: ["auth_stale"]`. The session token is expired or corrupt; only the user can fix it by running `nctl auth login` in their own terminal.
+- Generic auth failure with no JWT mention (e.g. never logged in) → set `blockers: ["nctl_not_authenticated"]`.
+
+Never run `nctl auth login` from the agent — it's blocked by the destructive-guard hook, and even if it weren't, it would alter the user's global session.
 
 Also read the project root to detect app type:
 
@@ -70,11 +78,14 @@ Also read the project root to detect app type:
 Report back to coordinator:
 ```
 nctl_installed: true | false
+nctl_version: <semver or none>
+active_org: <org name or none>
+available_orgs: [<org>, ...]
 remote_url: <url or none>
 branch: <branch or none>
 app_type: Rails | Node.js | Python | PHP | Go | Docker | unknown
 port: <number or unknown>
-blockers: [nctl-missing | no-remote | ...]
+blockers: [nctl_missing | nctl_outdated | nctl_not_authenticated | auth_stale | no_remote | ...]
 ```
 
 ---
