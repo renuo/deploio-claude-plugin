@@ -45,11 +45,11 @@ hints:
 
 ### What the agent must do
 
-**Constraints:** Do not run any `nctl` commands during context gathering — nctl commands may require auth and will produce misleading errors before the project exists. Use only: git commands, file system reads, and `nctl version`.
+**Constraints:** Do not run any `nctl` commands during context gathering — nctl commands may require auth and will produce misleading errors before the project exists. Use only: git commands, file system reads, and `nctl --version`.
 
 **Detection steps:**
 
-1. `nctl version` → set `nctl_installed: true/false`; require at least v1.16.0 for Deploio support
+1. `nctl --version` → set `nctl_installed: true/false`; require at least v1.16.0 for Deploio support. (The plugin's SessionStart hook also surfaces this at the start of the session, but re-check here so the gather-context output is self-contained.)
 2. Use the `remote_url` hint if provided; otherwise run `git remote get-url origin` → set `remote_url`
 3. `git branch --show-current` → set `branch`
 4. Read project files to detect `app_type` and `port` (framework details live in `references/<FRAMEWORK>.md`):

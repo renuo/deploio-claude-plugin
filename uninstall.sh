@@ -84,6 +84,23 @@ remove_dir "$CLAUDE_DIR/skills/shared"
 # --- hooks ------------------------------------------------------------------
 
 remove_file "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
+remove_file "$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+
+# Strip the SessionStart entry from settings.json (best-effort — needs jq).
+SETTINGS="$CLAUDE_DIR/settings.json"
+HOOK_CMD="$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+if [ -f "$SETTINGS" ] && command -v jq >/dev/null 2>&1; then
+  tmp=$(mktemp)
+  if jq --arg cmd "$HOOK_CMD" '
+    if (.hooks.SessionStart // []) | length > 0 then
+      .hooks.SessionStart = [.hooks.SessionStart[] | select((.hooks // []) | map(.command) | index($cmd) | not)]
+    else . end
+  ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"; then
+    info "Removed SessionStart entry from $SETTINGS"
+  else
+    rm -f "$tmp"
+  fi
+fi
 
 # --- commands ---------------------------------------------------------------
 
