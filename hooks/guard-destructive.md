@@ -7,6 +7,9 @@ You are reviewing a Bash command that is about to run. Check whether it matches 
 **Irreversible deletions (data loss risk):**
 - `nctl delete` followed by any resource type: `app`, `postgresdatabase`, `postgresql`, `mysqldatabase`, `mysql`, `keyvaluestore`, `opensearch`, `bucket`, `bucketuser`, `apiserviceaccount`
 
+**Global auth-state mutations:**
+- `nctl auth` followed by anything other than `whoami` (e.g. `login`, `set-org`, `set-project`) — these change the user's active org/project or session token globally, silently breaking concurrent shells that share the same nctl config. The agent must never run them; only the user does.
+
 **App suspension:**
 - `nctl update app` with `--replicas=0` (pauses the app — stops serving traffic)
 
