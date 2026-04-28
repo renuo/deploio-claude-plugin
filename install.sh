@@ -93,7 +93,13 @@ fi
 
 info "Installing agent..."
 mkdir -p "$CLAUDE_DIR/agents"
-cp "$src/agents/deploio-cli.md" "$CLAUDE_DIR/agents/deploio-cli.md"
+# Rewrite the hook path: the source uses ${CLAUDE_PLUGIN_ROOT} (resolved by
+# Claude Code only when the plugin is installed via the marketplace). For
+# flat installs that env var isn't set at hook-exec time, so substitute the
+# absolute install path. The hook file is renamed with a deploio- prefix to
+# avoid collisions in shared ~/.claude/hooks/.
+sed "s|\${CLAUDE_PLUGIN_ROOT}/hooks/guard-destructive.sh|${CLAUDE_DIR}/hooks/deploio-guard-destructive.sh|g" \
+  "$src/agents/deploio-cli.md" > "$CLAUDE_DIR/agents/deploio-cli.md"
 
 # --- install skills ---------------------------------------------------------
 
