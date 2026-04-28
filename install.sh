@@ -118,6 +118,51 @@ info "Installing hooks..."
 mkdir -p "$CLAUDE_DIR/hooks"
 cp "$src/hooks/guard-destructive.sh" "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
 chmod +x "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
+cp "$src/hooks/check-nctl-version.sh" "$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+chmod +x "$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+
+# Wire the version-check script as a SessionStart hook in settings.json.
+# Plugin marketplace installs handle this through hooks/hooks.json; flat
+# installs need the entry merged into the user's settings file.
+SETTINGS="$CLAUDE_DIR/settings.json"
+HOOK_CMD="$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+
+if command -v jq >/dev/null 2>&1; then
+  if [ -f "$SETTINGS" ]; then
+    tmp=$(mktemp)
+    # Idempotent merge: only append the entry if no existing SessionStart hook
+    # already points at the same command.
+    jq --arg cmd "$HOOK_CMD" '
+      .hooks //= {}
+      | .hooks.SessionStart //= []
+      | if (.hooks.SessionStart | map(.hooks // [] | map(.command)) | flatten | index($cmd)) then .
+        else .hooks.SessionStart += [{"hooks": [{"type": "command", "command": $cmd}]}]
+        end
+    ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  else
+    cat > "$SETTINGS" <<EOF
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "$HOOK_CMD" } ] }
+    ]
+  }
+}
+EOF
+  fi
+  ok "Enabled nctl version check on session start (settings.json)"
+else
+  info "jq not found — to enable nctl version check on session start, add to $SETTINGS:"
+  cat <<EOF
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "$HOOK_CMD" } ] }
+    ]
+  }
+}
+EOF
+fi
 
 # --- install commands -------------------------------------------------------
 
@@ -135,7 +180,8 @@ ok "Deploio Claude Code skills installed!"
 echo ""
 echo "  Agent:    $CLAUDE_DIR/agents/deploio-cli.md"
 echo "  Skills:   $CLAUDE_DIR/skills/deploio-{deploy,manage,debug,provision,ci-cd}/"
-echo "  Hooks:    $CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
+echo "  Hooks:    $CLAUDE_DIR/hooks/deploio-guard-destructive.sh
+            $CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
 echo "  Commands: $CLAUDE_DIR/commands/{deploy,debug}.md"
 echo ""
 echo "  Make sure nctl is installed and authenticated:"
