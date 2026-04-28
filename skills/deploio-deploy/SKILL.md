@@ -98,7 +98,16 @@ hints:
 }
 ```
 
-`blockers` is a list of strings, e.g. `["nctl not installed", "no git remote"]`.
+`blockers` is a list of canonical strings the coordinator maps to user-facing guidance:
+
+| Blocker | Trigger | Coordinator action |
+|---|---|---|
+| `nctl_missing` | `nctl --version` not found | Phase 2: ask user to install nctl |
+| `nctl_outdated` | nctl version below v1.16.0 | Phase 2: ask user to upgrade |
+| `nctl_not_authenticated` | `whoami` errors, no JWT mention | Phase 2: ask user to run `nctl auth login` |
+| `auth_stale` | `whoami` output contains `failed to parse JWT token` | Phase 2: surface explicit stale-token message (see below) |
+| `no_remote` | `git remote get-url origin` fails | Phase 2: ask user to add remote and push |
+| `app_type_unknown` | None of the framework files matched | Phase 2: ask user what runtime they use |
 
 ---
 
@@ -122,7 +131,25 @@ git push -u origin main
 ```
 Continue once the user confirms it's pushed.
 
-**nctl not authenticated** (or `auth_stale` reported by the agent — `whoami` returned "failed to parse JWT token..."): Ask the user to run `nctl auth login` themselves in their terminal (opens browser OAuth). The skill never runs `nctl auth login` or `nctl auth set-*` — those mutate the user's global nctl session and would silently break any other shell using the same config. Project scoping is handled per-command with `--project=<project>` on the executor side; the user does not need to run `nctl auth set-project`.
+**nctl not authenticated** (`nctl_not_authenticated`): The user has never logged in or their session was wiped. Show this message verbatim:
+
+> Your nctl session isn't authenticated. Run this in your terminal to log in
+> (a browser window will open):
+>
+>     nctl auth login
+>
+> Once it's done, ask me to deploy again.
+
+**Stale auth token** (`auth_stale` — `nctl auth whoami` output contains `failed to parse JWT token`): The session token is expired or corrupt. Don't paraphrase the raw nctl error — translate it into the message below:
+
+> Your local nctl auth token is stale (the session expired or got corrupted).
+> Run this in your terminal to refresh it:
+>
+>     nctl auth login
+>
+> Then ask me to deploy again — I'll pick up where we left off.
+
+The skill never runs `nctl auth login` or `nctl auth set-*` itself — those mutate the user's global nctl session and would silently break any other shell using the same config. Project scoping is handled per-command with `--project=<project>` on the executor side; the user does not need to run `nctl auth set-project`.
 
 **app_type unknown:** Ask the user what runtime their app uses before proceeding.
 
