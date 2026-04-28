@@ -31,7 +31,13 @@ info()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 ok()    { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 fail()  { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
 
-cleanup() { [ -z "${LOCAL_SRC:-}" ] && [ -d "${tmpdir:-}" ] && rm -rf "$tmpdir"; }
+# Don't end on a falsy short-circuit — under `set -e` + EXIT trap, the trap's
+# own non-zero return becomes the script's exit status, even on success.
+cleanup() {
+  if [ -z "${LOCAL_SRC:-}" ] && [ -d "${tmpdir:-}" ]; then
+    rm -rf "$tmpdir"
+  fi
+}
 trap cleanup EXIT
 
 # --- resolve install scope --------------------------------------------------
