@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 
 ---
 
+## [1.2.0] — 2026-04-29
+
+### Added
+- **SessionStart `nctl` version probe** — checks at session start that `nctl` is installed and at least at the plugin's required version (1.16.0). Surfaces a one-line install/upgrade advisory if missing or outdated, never blocks the session.
+- **`auth_stale` blocker** — gather-context now distinguishes a stale JWT (expired/corrupt session token) from never-authenticated and emits a verbatim friendly message telling the user to run `nctl auth login` themselves. New `nctl auth errors` section in `shared/troubleshooting.md`.
+
+### Changed
+- **Project scoping** — every `nctl` call from the executor and monitor agents now carries `--project=<full-project>`. The agent no longer runs `nctl auth set-project`, which mutated the user's global kubeconfig and silently broke other concurrent shells. Executor spec replaces `project_suffix` with explicit `org` + `project` fields.
+- **Destructive-guard hook** — now blocks every `nctl auth` subcommand except `whoami`. The skill prompts the user to run `nctl auth login` / `nctl auth set-org` themselves with an upfront warning that those commands disrupt other concurrent sessions sharing the same nctl config.
+- **Hook path resolution** — agent frontmatter now uses `${CLAUDE_PLUGIN_ROOT}/hooks/guard-destructive.sh` so the hook resolves correctly regardless of CWD. Marketplace installs use the env var directly; `install.sh` substitutes the absolute path on flat installs so global installs no longer lose the guard outside the source repo.
+- **Version flag** — gather-context now uses `nctl --version` (works on old and new nctl) instead of `nctl version` (fails on releases below 1.12).
+
+### Fixed
+- `install.sh` exit code on local source — the cleanup trap returned 1 under `set -e` when `LOCAL_SRC` was set, breaking CI and scripted installs even on success.
+
+---
+
 ## [1.1.0] — 2026-03-23
 
 ### Added
