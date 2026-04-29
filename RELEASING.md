@@ -12,14 +12,13 @@ This document is the checklist. Run through it top-to-bottom every time.
 
 The agent ↔ skill executor spec (e.g. `task: deploy` fields) is an internal contract — bump MINOR when its shape changes, since the plugin still works end-to-end. Reserve MAJOR for things a *user* would feel.
 
-## Plugin version vs skill version
+## All versions move together
 
-These are intentionally decoupled:
+The plugin, marketplace metadata, marketplace plugin entry, and every skill share the **same version number**. On every release, bump all of them — even skills whose contents didn't change in this cycle.
 
-- **Plugin version** (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`) tracks the bundle as a whole. Bump on every release.
-- **Skill version** (`skills/<name>/SKILL.md` frontmatter `metadata.version`) tracks that skill's behavior. Bump only when *that* skill's contents changed in this release. Skip skills that didn't change.
+This is a deliberate policy. Per-skill versions used to be decoupled from the plugin (each bumped only when that skill's contents changed), but the seven version numbers across the repo could end up several minor releases apart, making it impossible to tell at a glance which release a user was on without reading every metadata block. Aligned versioning trades skill-level history fidelity for one obvious answer to "which release is this".
 
-Most plugin releases bump only one or two skill versions. Bumping all five "to keep them in sync" is wrong — it inflates each skill's history with no real change behind the bump.
+If the plugin is ever split into separately-installable units, decoupling will need to come back. Until then: one number, everywhere.
 
 ## The four files
 
@@ -27,7 +26,7 @@ Most plugin releases bump only one or two skill versions. Bumping all five "to k
 |---|---|
 | `.claude-plugin/plugin.json` | `"version"` (one occurrence) |
 | `.claude-plugin/marketplace.json` | `"version"` in **two** places: `metadata.version` and `plugins[0].version` — both must match |
-| `skills/<name>/SKILL.md` | `metadata.version` for **only the skills changed** in this release |
+| `skills/<name>/SKILL.md` | `metadata.version` in **every skill** — all five move together with the plugin |
 | `CHANGELOG.md` | New entry at the top (under the header), dated today, with `### Added` / `### Changed` / `### Fixed` sections matching what's in the diff |
 
 ## Step-by-step
@@ -62,22 +61,25 @@ printf "marketplace.json metadata:  %s\n" "$MM"
 printf "marketplace.json plugins:   %s\n" "$MP"
 printf "CHANGELOG.md (top entry):   %s\n" "$CL"
 
-if [ "$PV" = "$MM" ] && [ "$PV" = "$MP" ] && [ "$PV" = "$CL" ]; then
-  echo "OK — all four agree on $PV"
+OK=true
+[ "$PV" = "$MM" ] && [ "$PV" = "$MP" ] && [ "$PV" = "$CL" ] || OK=false
+
+echo
+echo "Skill versions:"
+for f in skills/*/SKILL.md; do
+  v=$(awk '/^metadata:/{m=1; next} m && /^  version:/{print $2; exit}' "$f")
+  marker=""; [ "$v" = "$PV" ] || { marker="  (mismatch)"; OK=false; }
+  printf "  %-32s %s%s\n" "$(basename "$(dirname "$f")")" "$v" "$marker"
+done
+
+echo
+if $OK; then
+  echo "OK — all versions agree on $PV"
 else
   echo "DRIFT — fix before committing"
   exit 1
 fi
-
-echo
-echo "Skill versions (only the ones you changed in this release should differ from the previous tag):"
-for f in skills/*/SKILL.md; do
-  v=$(awk '/^metadata:/{m=1; next} m && /^  version:/{print $2; exit}' "$f")
-  printf "  %-32s %s\n" "$(basename "$(dirname "$f")")" "$v"
-done
 ```
-
-The skill section is informational — there's no automatic check that "only the skills you touched are bumped", because that's a judgment call. Compare against the previous tag (`git diff $(git describe --tags --abbrev=0) -- skills/`) if unsure.
 
 ## After push
 

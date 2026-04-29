@@ -3,7 +3,7 @@ name: deploio-deploy
 description: Handles first-time deployment of an app to Deploio — from git URL to live HTTPS URL. This skill should be triggered when deploying a new app for the first time: "deploy my app on Deploio", "create a Deploio app", "how do I deploy to Deploio", "host on Deploio", "push to Deploio", "new app on Deploio", "first deploy to Deploio", "set up a new Deploio app", or setting up a new Deploio app from scratch. Covers auth, project setup, git credential resolution, buildpack/Dockerfile detection, and build monitoring. Do NOT use for apps already running on Deploio (use deploio-manage to update them).
 license: MIT
 metadata:
-  version: 1.4.0
+  version: 1.5.0
 ---
 
 # Deploio: First-Time App Deployment
@@ -284,8 +284,7 @@ Once confirmed, use `TaskCreate` to create a task named "Deploying `<app-name>`"
 
 ```
 task: deploy
-org: <selected_org>                       # for reporting only — agent never runs nctl auth set-*
-project: <selected_org>-<repo-name>       # full project string — agent passes to every --project flag
+project: <selected_org>-<repo-name>       # full project string — agent passes to every --project flag (scoping is authoritative; agent does not need org separately)
 app: <app-name>
 git_remote: <remote_url>
 branch: <branch>
