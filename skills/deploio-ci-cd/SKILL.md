@@ -3,7 +3,7 @@ name: deploio-ci-cd
 description: Sets up automated deployments to Deploio from CI/CD pipelines using nctl service accounts. This skill should be triggered when the user wants to automate deployments: "GitHub Actions Deploio", "CI/CD for Deploio", "auto-deploy to Deploio", "deploy on push", "automate deployments", "configure deployment pipeline", "automate releases", "GitLab CI deploy", "CircleCI deploy", "Deploio in pipeline". Covers service account creation, credential management, GitHub Actions workflow templates, and multi-environment (staging/production) patterns. Works with any CI system. Do NOT use for manual one-time deployments (use deploio-deploy or deploio-manage).
 license: MIT
 metadata:
-  version: 1.3.0
+  version: 1.5.0
 ---
 
 # Deploio: CI/CD Setup

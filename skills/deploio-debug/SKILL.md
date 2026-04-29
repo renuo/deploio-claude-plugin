@@ -3,7 +3,7 @@ name: deploio-debug
 description: Diagnoses and fixes Deploio app problems — crashes, build failures, release errors, and runtime errors. This skill should be triggered when something is broken or wrong: "app crashed", "deploy failing", "build error", "release failed", "app not starting", "getting 500 errors", "getting 503 errors", "bad gateway", "migrations failed", "why is my app broken", "something went wrong after deploy", "app keeps restarting", "app is slow", "high memory usage", "OOM", "performance issue". Gathers logs and state automatically, presents a diagnosis, then applies fixes directly. Do NOT use for routine log monitoring or opening a Rails console on a healthy app (use deploio-manage), first-time deployment (use deploio-deploy), or provisioning services (use deploio-provision).
 license: MIT
 metadata:
-  version: 1.4.0
+  version: 1.5.0
 ---
 
 # Deploio: Debugging and Troubleshooting
