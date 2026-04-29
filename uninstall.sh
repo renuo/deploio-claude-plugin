@@ -86,17 +86,22 @@ remove_dir "$CLAUDE_DIR/skills/shared"
 remove_file "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
 remove_file "$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
 
-# Strip the SessionStart entry from settings.json (best-effort — needs jq).
+# Strip every settings.json hook entry pointing at our hooks/ directory.
+# Best-effort: needs jq; without jq we leave the entries in place (they're
+# harmless once the scripts are gone — they'll just fail silently).
 SETTINGS="$CLAUDE_DIR/settings.json"
-HOOK_CMD="$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+HOOK_PREFIX="$CLAUDE_DIR/hooks/"
 if [ -f "$SETTINGS" ] && command -v jq >/dev/null 2>&1; then
   tmp=$(mktemp)
-  if jq --arg cmd "$HOOK_CMD" '
-    if (.hooks.SessionStart // []) | length > 0 then
-      .hooks.SessionStart = [.hooks.SessionStart[] | select((.hooks // []) | map(.command) | index($cmd) | not)]
-    else . end
+  if jq --arg prefix "$HOOK_PREFIX" '
+    def strip_deploio:
+      map(select(
+        (.hooks // []) | any(((.command // .prompt) // "") | startswith($prefix)) | not
+      ));
+    .hooks //= {} |
+    .hooks |= with_entries(.value |= strip_deploio)
   ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"; then
-    info "Removed SessionStart entry from $SETTINGS"
+    info "Stripped Deploio hook entries from $SETTINGS"
   else
     rm -f "$tmp"
   fi

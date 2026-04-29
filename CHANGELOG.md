@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 
 ---
 
+## [1.2.1] — 2026-04-29
+
+### Changed
+- **nctl version probe** moved from `SessionStart` to `SubagentStart` with matcher `deploio-cli`. Now fires precisely when the deploio-cli agent is spawned (i.e. when nctl is about to run), instead of on every session start including `/clear` and auto-compactions. The script's stdout is rewritten as a directive for Claude (since SubagentStart output is injected into Claude's context, not displayed in the user's terminal) so the upgrade message is reliably surfaced to the user.
+- **Hook wiring converged on a single source of truth.** Both hooks (destructive-guard and nctl-probe) are now declared in `hooks/hooks.json` and nowhere else. Marketplace installs read it directly; flat installs merge the substituted block into `settings.json`. The agent's frontmatter no longer carries an inline `hooks:` block — same scope on both install paths (whole session, not agent-only).
+- **Destructive-guard semantics on flat install** unified to the shell-based hard block (matching marketplace behavior). The prompt-based variant (`hooks/guard-destructive.md`) is removed; the guard now hard-blocks via exit 2 across both install paths.
+
+### Fixed
+- `install.sh` jq merge is genuinely idempotent and surfaces failures: temp files are cleaned up via trap, `jq` errors abort the install rather than silently leaving the file unchanged with a misleading success message. The merge preserves user-owned hooks (e.g. PreToolUse on Edit, Stop) and only strips entries pointing into the Deploio hooks directory.
+
+---
+
 ## [1.2.0] — 2026-04-29
 
 ### Added
