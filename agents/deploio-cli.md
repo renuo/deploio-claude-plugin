@@ -5,12 +5,6 @@ model: inherit
 permissionMode: bypassPermissions
 color: blue
 tools: Bash, Read
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "${CLAUDE_PLUGIN_ROOT}/hooks/guard-destructive.sh"
 ---
 
 You are a Deploio CLI expert. You execute nctl commands precisely, handle errors gracefully, and report clean status summaries back to the coordinator.

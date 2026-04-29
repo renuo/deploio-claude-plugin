@@ -93,13 +93,7 @@ fi
 
 info "Installing agent..."
 mkdir -p "$CLAUDE_DIR/agents"
-# Rewrite the hook path: the source uses ${CLAUDE_PLUGIN_ROOT} (resolved by
-# Claude Code only when the plugin is installed via the marketplace). For
-# flat installs that env var isn't set at hook-exec time, so substitute the
-# absolute install path. The hook file is renamed with a deploio- prefix to
-# avoid collisions in shared ~/.claude/hooks/.
-sed "s|\${CLAUDE_PLUGIN_ROOT}/hooks/guard-destructive.sh|${CLAUDE_DIR}/hooks/deploio-guard-destructive.sh|g" \
-  "$src/agents/deploio-cli.md" > "$CLAUDE_DIR/agents/deploio-cli.md"
+cp "$src/agents/deploio-cli.md" "$CLAUDE_DIR/agents/deploio-cli.md"
 
 # --- install skills ---------------------------------------------------------
 
@@ -121,47 +115,62 @@ chmod +x "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
 cp "$src/hooks/check-nctl-version.sh" "$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
 chmod +x "$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
 
-# Wire the version-check script as a SessionStart hook in settings.json.
-# Plugin marketplace installs handle this through hooks/hooks.json; flat
-# installs need the entry merged into the user's settings file.
+# Wire the plugin's hook entries into the user's settings.json. Marketplace
+# installs read hooks/hooks.json directly (with ${CLAUDE_PLUGIN_ROOT} resolved
+# at hook-exec time). Flat installs have no plugin context, so we substitute
+# every ${CLAUDE_PLUGIN_ROOT}/hooks/<name>.sh with the absolute, deploio-
+# prefixed install path and merge the result into settings.json. Re-running
+# the installer is idempotent: prior entries pointing into $CLAUDE_DIR/hooks/
+# are stripped before the new ones are appended.
 SETTINGS="$CLAUDE_DIR/settings.json"
-HOOK_CMD="$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+HOOK_PREFIX="$CLAUDE_DIR/hooks/"
 
-if command -v jq >/dev/null 2>&1; then
-  if [ -f "$SETTINGS" ]; then
-    tmp=$(mktemp)
-    # Idempotent merge: only append the entry if no existing SessionStart hook
-    # already points at the same command.
-    jq --arg cmd "$HOOK_CMD" '
-      .hooks //= {}
-      | .hooks.SessionStart //= []
-      | if (.hooks.SessionStart | map(.hooks // [] | map(.command)) | flatten | index($cmd)) then .
-        else .hooks.SessionStart += [{"hooks": [{"type": "command", "command": $cmd}]}]
-        end
-    ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
-  else
-    cat > "$SETTINGS" <<EOF
-{
-  "hooks": {
-    "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "$HOOK_CMD" } ] }
-    ]
-  }
-}
-EOF
-  fi
-  ok "Enabled nctl version check on session start (settings.json)"
+# Build the substituted hooks block. Two replacements: env-var → absolute
+# path, and source script name → installed (prefixed) script name.
+NEW_HOOKS_JSON=$(sed \
+  -e "s|\${CLAUDE_PLUGIN_ROOT}/hooks/guard-destructive\.sh|${HOOK_PREFIX}deploio-guard-destructive.sh|g" \
+  -e "s|\${CLAUDE_PLUGIN_ROOT}/hooks/check-nctl-version\.sh|${HOOK_PREFIX}deploio-check-nctl-version.sh|g" \
+  "$src/hooks/hooks.json")
+
+if ! command -v jq >/dev/null 2>&1; then
+  info "jq not found — to enable Deploio hooks, copy this block into $SETTINGS:"
+  echo "$NEW_HOOKS_JSON"
 else
-  info "jq not found — to enable nctl version check on session start, add to $SETTINGS:"
-  cat <<EOF
-{
-  "hooks": {
-    "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "$HOOK_CMD" } ] }
-    ]
-  }
-}
-EOF
+  hooks_tmp=$(mktemp)
+  # Make sure the temp file is cleaned up even if jq fails or the script
+  # exits unexpectedly. The cleanup trap from the top of the script handles
+  # tmpdir; this trap appends to it for hooks_tmp.
+  trap 'rm -f "$hooks_tmp"; cleanup' EXIT
+
+  # If settings.json doesn't exist yet, start from an empty object.
+  jq_input="$SETTINGS"
+  if [ ! -f "$SETTINGS" ]; then
+    jq_input=$(mktemp)
+    echo '{}' > "$jq_input"
+    trap 'rm -f "$hooks_tmp" "$jq_input"; cleanup' EXIT
+  fi
+
+  if echo "$NEW_HOOKS_JSON" | jq -s --arg prefix "$HOOK_PREFIX" '
+    # Strip any existing entry that already references one of our installed
+    # hook scripts (idempotent re-install).
+    def strip_deploio:
+      map(select(
+        (.hooks // []) | any(((.command // .prompt) // "") | startswith($prefix)) | not
+      ));
+
+    .[0] as $existing | .[1] as $new |
+    ($existing | .hooks //= {}) |
+    reduce ($new.hooks | keys[]) as $event (.;
+      .hooks[$event] = (((.hooks[$event] // []) | strip_deploio) + $new.hooks[$event])
+    )
+  ' "$jq_input" - > "$hooks_tmp"; then
+    mv "$hooks_tmp" "$SETTINGS"
+    ok "Wired Deploio hooks into $SETTINGS"
+  else
+    fail "jq failed to merge hooks into $SETTINGS — file left unchanged"
+  fi
+
+  trap cleanup EXIT
 fi
 
 # --- install commands -------------------------------------------------------
