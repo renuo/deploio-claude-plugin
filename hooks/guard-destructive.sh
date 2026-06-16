@@ -21,6 +21,17 @@ if echo "$COMMAND" | grep -qE '\bnctl\s+delete\b'; then
   exit 2
 fi
 
+# --- Global auth-state mutations --------------------------------------------
+# Block any `nctl auth <subcommand>` except `whoami`. These mutate the user's
+# kubeconfig / active project / active org / session token globally — silently
+# breaking any other shell session using the same nctl config. The user runs
+# these themselves; the agent only reads state via `nctl auth whoami`.
+if echo "$COMMAND" | grep -qE '\bnctl\s+auth\b' && ! echo "$COMMAND" | grep -qE '\bnctl\s+auth\s+whoami\b'; then
+  SUBCMD=$(echo "$COMMAND" | grep -oE '\bnctl\s+auth(\s+\S+)?' | awk '{print $3}')
+  echo "BLOCKED: 'nctl auth ${SUBCMD:-<subcommand>}' changes global nctl state (active org/project or session token) and silently breaks any other shell using the same nctl config. Ask the user to run it manually in their terminal." >&2
+  exit 2
+fi
+
 # --- Scale to zero (stops serving traffic) ----------------------------------
 # Anchor on the flag itself rather than the subcommand — `nctl update app`
 # and `nctl update application` are both valid, and we want to catch both.

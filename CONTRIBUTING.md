@@ -17,9 +17,7 @@ Cross-skill troubleshooting patterns go in `skills/shared/troubleshooting.md`.
 
 ## Releasing a new version
 
-Bump `"version"` in `.claude-plugin/plugin.json`, commit, and push to `main`. The GitHub Actions workflow creates the git tag and GitHub release automatically.
-
-Version format: `MAJOR.MINOR.PATCH` following [semver](https://semver.org).
+See [RELEASING.md](RELEASING.md) for the full checklist. Short version: four files (`plugin.json`, `marketplace.json`, the changed `SKILL.md`s, and `CHANGELOG.md`) move together; pushing to `main` triggers the autorelease.
 
 ## Reporting issues
 

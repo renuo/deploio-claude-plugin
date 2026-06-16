@@ -54,4 +54,4 @@ Nine docs: [docs.nine.ch](https://docs.nine.ch)
 
 ## Versioning
 
-Bump `"version"` in `.claude-plugin/plugin.json` and push to `main` — the GitHub Actions workflow tags and releases automatically.
+See `RELEASING.md` at the repo root for the full checklist. Four files move together: `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (two places — `metadata.version` and `plugins[0].version`), each changed skill's `SKILL.md` `metadata.version`, and a new `CHANGELOG.md` entry. Pushing to `main` after the bump tags + releases automatically.

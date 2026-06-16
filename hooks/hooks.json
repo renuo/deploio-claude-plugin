@@ -5,8 +5,19 @@
         "matcher": "Bash",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "${CLAUDE_PLUGIN_ROOT}/hooks/guard-destructive.md"
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/guard-destructive.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "deploio-cli",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-nctl-version.sh"
           }
         ]
       }

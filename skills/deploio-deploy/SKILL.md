@@ -3,7 +3,7 @@ name: deploio-deploy
 description: Handles first-time deployment of an app to Deploio — from git URL to live HTTPS URL. This skill should be triggered when deploying a new app for the first time: "deploy my app on Deploio", "create a Deploio app", "how do I deploy to Deploio", "host on Deploio", "push to Deploio", "new app on Deploio", "first deploy to Deploio", "set up a new Deploio app", or setting up a new Deploio app from scratch. Covers auth, project setup, git credential resolution, buildpack/Dockerfile detection, and build monitoring. Do NOT use for apps already running on Deploio (use deploio-manage to update them).
 license: MIT
 metadata:
-  version: 1.3.0
+  version: 1.5.0
 ---
 
 # Deploio: First-Time App Deployment
@@ -45,11 +45,11 @@ hints:
 
 ### What the agent must do
 
-**Constraints:** Do not run any `nctl` commands during context gathering — nctl commands may require auth and will produce misleading errors before the project exists. Use only: git commands, file system reads, and `nctl version`.
+**Constraints:** Do not run any `nctl` commands during context gathering — nctl commands may require auth and will produce misleading errors before the project exists. Use only: git commands, file system reads, and `nctl --version`.
 
 **Detection steps:**
 
-1. `nctl version` → set `nctl_installed: true/false`; require at least v1.16.0 for Deploio support
+1. `nctl --version` → set `nctl_installed: true/false`; require at least v1.16.0 for Deploio support. (The plugin's SessionStart hook also surfaces this at the start of the session, but re-check here so the gather-context output is self-contained.)
 2. Use the `remote_url` hint if provided; otherwise run `git remote get-url origin` → set `remote_url`
 3. `git branch --show-current` → set `branch`
 4. Read project files to detect `app_type` and `port` (framework details live in `references/<FRAMEWORK>.md`):
@@ -98,7 +98,16 @@ hints:
 }
 ```
 
-`blockers` is a list of strings, e.g. `["nctl not installed", "no git remote"]`.
+`blockers` is a list of canonical strings the coordinator maps to user-facing guidance:
+
+| Blocker | Trigger | Coordinator action |
+|---|---|---|
+| `nctl_missing` | `nctl --version` not found | Phase 2: ask user to install nctl |
+| `nctl_outdated` | nctl version below v1.16.0 | Phase 2: ask user to upgrade |
+| `nctl_not_authenticated` | `whoami` errors, no JWT mention | Phase 2: ask user to run `nctl auth login` |
+| `auth_stale` | `whoami` output contains `failed to parse JWT token` | Phase 2: surface explicit stale-token message (see below) |
+| `no_remote` | `git remote get-url origin` fails | Phase 2: ask user to add remote and push |
+| `app_type_unknown` | None of the framework files matched | Phase 2: ask user what runtime they use |
 
 ---
 
@@ -122,7 +131,25 @@ git push -u origin main
 ```
 Continue once the user confirms it's pushed.
 
-**nctl not authenticated:** Ask the user to run `nctl auth login` (opens browser OAuth) then `nctl auth set-project <project>`.
+**nctl not authenticated** (`nctl_not_authenticated`): The user has never logged in or their session was wiped. Show this message verbatim:
+
+> Your nctl session isn't authenticated. Run this in your terminal to log in
+> (a browser window will open):
+>
+>     nctl auth login
+>
+> Once it's done, ask me to deploy again.
+
+**Stale auth token** (`auth_stale` — `nctl auth whoami` output contains `failed to parse JWT token`): The session token is expired or corrupt. Don't paraphrase the raw nctl error — translate it into the message below:
+
+> Your local nctl auth token is stale (the session expired or got corrupted).
+> Run this in your terminal to refresh it:
+>
+>     nctl auth login
+>
+> Then ask me to deploy again — I'll pick up where we left off.
+
+The skill never runs `nctl auth login` or `nctl auth set-*` itself — those mutate the user's global nctl session and would silently break any other shell using the same config. Project scoping is handled per-command with `--project=<project>` on the executor side; the user does not need to run `nctl auth set-project`.
 
 **app_type unknown:** Ask the user what runtime their app uses before proceeding.
 
@@ -160,12 +187,18 @@ Your account has access to multiple Deploio organizations:
   2. acme-staging
 
 Which organization should this app be deployed to?
-(Or run `nctl auth set-org <name>` first to set a default.)
+
+If you'd like to make a default permanently, run this in your terminal:
+    nctl auth set-org <name>
+⚠ Heads up: that command changes the active org globally — any other shell or
+  Claude session you have open using the same nctl config will switch with it.
+  This deploy doesn't need it: I'll scope every command with --project so your
+  current state stays untouched.
 ```
 
-Set `selected_org` from the user's answer.
+Set `selected_org` from the user's answer. **Never run `nctl auth set-org` or `nctl auth set-project` from the skill or agent** — they're blocked by the destructive-guard hook precisely because they mutate global nctl state.
 
-> **Terminology note:** Deploio calls the top-level grouping an **organization** (set with `nctl auth set-org`). The app lives within the organization. Do not use the word "project" when referring to this selection — it confuses users who see organization names in `nctl auth whoami` output.
+> **Terminology note:** Deploio calls the top-level grouping an **organization**. The app lives within the organization. Do not use the word "project" when referring to this selection — it confuses users who see organization names in `nctl auth whoami` output.
 
 ---
 
@@ -251,7 +284,7 @@ Once confirmed, use `TaskCreate` to create a task named "Deploying `<app-name>`"
 
 ```
 task: deploy
-org: <selected_org>
+project: <selected_org>-<repo-name>       # full project string — agent passes to every --project flag (scoping is authoritative; agent does not need org separately)
 app: <app-name>
 git_remote: <remote_url>
 branch: <branch>
@@ -279,13 +312,18 @@ For Rails apps, if `SECRET_KEY_BASE` is not already set by the user, the executo
 
 ### nctl commands the executor will run (in order)
 
-```bash
-# 1. Authenticate (skip if already logged in)
-nctl auth login
-nctl auth set-project <project>
+The executor never runs `nctl auth login` or `nctl auth set-*` — those are blocked by the destructive-guard hook and would mutate the user's global nctl session. Instead it verifies auth with read-only `nctl auth whoami`, and scopes every other command with `--project=<project>`. If `whoami` fails or reports a stale JWT, the executor reports `auth_stale` back and the coordinator asks the user to run `nctl auth login` themselves.
 
-# 2. Create the app
+```bash
+# 1. Verify auth (read-only)
+nctl auth whoami
+
+# 2. Ensure the project exists, create if missing
+nctl get project <project> 2>&1 || nctl create project <project>
+
+# 3. Create the app — every command carries --project=<project>
 nctl create app <app> \
+  --project=<project> \
   --git-url=<git_remote> \
   --git-revision=<branch> \
   [--git-sub-path=<git_sub_path>]                        # monorepos only
@@ -308,9 +346,9 @@ nctl create app <app> \
   [--health-probe-period-seconds=<n>]                    # default 10, min 1
   [--hosts=<domain1,domain2>]                            # custom domains at creation time
 
-# 3. Get the live URL and (if basic_auth) credentials
+# 4. Get the live URL and (if basic_auth) credentials
 nctl get app <app> --project=<project>
-[nctl get app <app> --basic-auth-credentials]            # if basic_auth is true
+[nctl get app <app> --project=<project> --basic-auth-credentials]   # if basic_auth is true
 ```
 
 **Env var syntax:** Multiple env vars can be passed either as repeated flags (`--env=KEY1=VAL1 --env=KEY2=VAL2`) or semicolon-separated in a single flag (`--env='KEY1=VAL1;KEY2=VAL2'`). Both forms are accepted. The same syntax applies to `--build-env`.
@@ -323,7 +361,7 @@ On failure, report back: `{ "status": "failed", "error": "<nctl error output>", 
 ```
 task: monitor-logs
 app: <app-name>
-org: <selected_org>
+project: <selected_org>-<repo-name>   # full project string — agent passes to every --project flag
 termination: stop when executor reports success or failure, or after 20 minutes — whichever comes first
 ```
 
