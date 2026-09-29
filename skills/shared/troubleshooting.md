@@ -53,3 +53,11 @@ Common problems, their root causes, and how to fix them. Referenced by `deploio-
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Auth error on git pull | Private repo, no credentials | Add SSH key (`--git-ssh-private-key-from-file`) or HTTPS token (`--git-username`/`--git-password`) |
+
+## nctl auth errors
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `nctl auth whoami`: `failed to parse JWT token` | Local kubeconfig token expired or corrupt | Tell the user: "Your local nctl auth token is stale — run `nctl auth login` in your terminal." Skill/agent never run this. |
+| `nctl auth whoami` errors with no JWT mention | User never logged in, or kubeconfig wiped | Tell the user to run `nctl auth login` once in their terminal. |
+| Org in `whoami` doesn't match the spec org | Active org changed in another shell | Tell the user — never run `nctl auth set-org` from the skill or agent (concurrent sessions sharing the same nctl config would silently break). |

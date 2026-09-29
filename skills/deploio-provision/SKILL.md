@@ -3,7 +3,7 @@ name: deploio-provision
 description: Provisions and connects managed backing services to Deploio apps — PostgreSQL, MySQL, Redis-compatible KVS, OpenSearch, and S3-compatible object storage. This skill should be triggered when the user needs to add a database, cache, or storage service: "add postgres to Deploio", "provision MySQL", "need a database on Deploio", "add Redis", "create KVS", "set up object storage", "add OpenSearch", "connect database to Deploio app", "add Sidekiq", "background jobs on Deploio", "file uploads on Deploio", "object storage Deploio". Handles creation, credential extraction, env var injection, and connection verification. Do NOT use for app config changes unrelated to backing services (use deploio-manage).
 license: MIT
 metadata:
-  version: 1.3.0
+  version: 1.5.0
 ---
 
 # Deploio: Provisioning Backing Services

@@ -31,7 +31,13 @@ info()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 ok()    { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 fail()  { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
 
-cleanup() { [ -z "${LOCAL_SRC:-}" ] && [ -d "${tmpdir:-}" ] && rm -rf "$tmpdir"; }
+# Don't end on a falsy short-circuit — under `set -e` + EXIT trap, the trap's
+# own non-zero return becomes the script's exit status, even on success.
+cleanup() {
+  if [ -z "${LOCAL_SRC:-}" ] && [ -d "${tmpdir:-}" ]; then
+    rm -rf "$tmpdir"
+  fi
+}
 trap cleanup EXIT
 
 # --- resolve install scope --------------------------------------------------
@@ -106,6 +112,66 @@ info "Installing hooks..."
 mkdir -p "$CLAUDE_DIR/hooks"
 cp "$src/hooks/guard-destructive.sh" "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
 chmod +x "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
+cp "$src/hooks/check-nctl-version.sh" "$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+chmod +x "$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+
+# Wire the plugin's hook entries into the user's settings.json. Marketplace
+# installs read hooks/hooks.json directly (with ${CLAUDE_PLUGIN_ROOT} resolved
+# at hook-exec time). Flat installs have no plugin context, so we substitute
+# every ${CLAUDE_PLUGIN_ROOT}/hooks/<name>.sh with the absolute, deploio-
+# prefixed install path and merge the result into settings.json. Re-running
+# the installer is idempotent: prior entries pointing into $CLAUDE_DIR/hooks/
+# are stripped before the new ones are appended.
+SETTINGS="$CLAUDE_DIR/settings.json"
+HOOK_PREFIX="$CLAUDE_DIR/hooks/"
+
+# Build the substituted hooks block. Two replacements: env-var → absolute
+# path, and source script name → installed (prefixed) script name.
+NEW_HOOKS_JSON=$(sed \
+  -e "s|\${CLAUDE_PLUGIN_ROOT}/hooks/guard-destructive\.sh|${HOOK_PREFIX}deploio-guard-destructive.sh|g" \
+  -e "s|\${CLAUDE_PLUGIN_ROOT}/hooks/check-nctl-version\.sh|${HOOK_PREFIX}deploio-check-nctl-version.sh|g" \
+  "$src/hooks/hooks.json")
+
+if ! command -v jq >/dev/null 2>&1; then
+  info "jq not found — to enable Deploio hooks, copy this block into $SETTINGS:"
+  echo "$NEW_HOOKS_JSON"
+else
+  hooks_tmp=$(mktemp)
+  # Make sure the temp file is cleaned up even if jq fails or the script
+  # exits unexpectedly. The cleanup trap from the top of the script handles
+  # tmpdir; this trap appends to it for hooks_tmp.
+  trap 'rm -f "$hooks_tmp"; cleanup' EXIT
+
+  # If settings.json doesn't exist yet, start from an empty object.
+  jq_input="$SETTINGS"
+  if [ ! -f "$SETTINGS" ]; then
+    jq_input=$(mktemp)
+    echo '{}' > "$jq_input"
+    trap 'rm -f "$hooks_tmp" "$jq_input"; cleanup' EXIT
+  fi
+
+  if echo "$NEW_HOOKS_JSON" | jq -s --arg prefix "$HOOK_PREFIX" '
+    # Strip any existing entry that already references one of our installed
+    # hook scripts (idempotent re-install).
+    def strip_deploio:
+      map(select(
+        (.hooks // []) | any(((.command // .prompt) // "") | startswith($prefix)) | not
+      ));
+
+    .[0] as $existing | .[1] as $new |
+    ($existing | .hooks //= {}) |
+    reduce ($new.hooks | keys[]) as $event (.;
+      .hooks[$event] = (((.hooks[$event] // []) | strip_deploio) + $new.hooks[$event])
+    )
+  ' "$jq_input" - > "$hooks_tmp"; then
+    mv "$hooks_tmp" "$SETTINGS"
+    ok "Wired Deploio hooks into $SETTINGS"
+  else
+    fail "jq failed to merge hooks into $SETTINGS — file left unchanged"
+  fi
+
+  trap cleanup EXIT
+fi
 
 # --- install commands -------------------------------------------------------
 
@@ -123,7 +189,8 @@ ok "Deploio Claude Code skills installed!"
 echo ""
 echo "  Agent:    $CLAUDE_DIR/agents/deploio-cli.md"
 echo "  Skills:   $CLAUDE_DIR/skills/deploio-{deploy,manage,debug,provision,ci-cd}/"
-echo "  Hooks:    $CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
+echo "  Hooks:    $CLAUDE_DIR/hooks/deploio-guard-destructive.sh
+            $CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
 echo "  Commands: $CLAUDE_DIR/commands/{deploy,debug}.md"
 echo ""
 echo "  Make sure nctl is installed and authenticated:"

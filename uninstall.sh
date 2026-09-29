@@ -84,6 +84,28 @@ remove_dir "$CLAUDE_DIR/skills/shared"
 # --- hooks ------------------------------------------------------------------
 
 remove_file "$CLAUDE_DIR/hooks/deploio-guard-destructive.sh"
+remove_file "$CLAUDE_DIR/hooks/deploio-check-nctl-version.sh"
+
+# Strip every settings.json hook entry pointing at our hooks/ directory.
+# Best-effort: needs jq; without jq we leave the entries in place (they're
+# harmless once the scripts are gone — they'll just fail silently).
+SETTINGS="$CLAUDE_DIR/settings.json"
+HOOK_PREFIX="$CLAUDE_DIR/hooks/"
+if [ -f "$SETTINGS" ] && command -v jq >/dev/null 2>&1; then
+  tmp=$(mktemp)
+  if jq --arg prefix "$HOOK_PREFIX" '
+    def strip_deploio:
+      map(select(
+        (.hooks // []) | any(((.command // .prompt) // "") | startswith($prefix)) | not
+      ));
+    .hooks //= {} |
+    .hooks |= with_entries(.value |= strip_deploio)
+  ' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"; then
+    info "Stripped Deploio hook entries from $SETTINGS"
+  else
+    rm -f "$tmp"
+  fi
+fi
 
 # --- commands ---------------------------------------------------------------
 
